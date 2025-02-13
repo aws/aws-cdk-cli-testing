@@ -1,6 +1,5 @@
-import { yarn } from 'cdklabs-projen-project-types';
+import { yarn, CdkCliIntegTestsWorkflow } from 'cdklabs-projen-project-types';
 import * as pj from 'projen';
-import { CdkCliIntegTestsWorkflow } from './projenrc/cdk-cli-integ-tests';
 
 // 5.7 sometimes gives a weird error in `ts-jest` in `@aws-cdk/cli-lib-alpha`
 // https://github.com/microsoft/TypeScript/issues/60159
@@ -102,7 +101,7 @@ const repo = configureProject(
 
     defaultReleaseBranch: 'main',
     devDeps: [
-      'cdklabs-projen-project-types@^0.1.215',
+      'cdklabs-projen-project-types@^0.1.219',
     ],
 
     eslintOptions: {
