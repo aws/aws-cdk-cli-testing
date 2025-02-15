@@ -131,9 +131,8 @@ __EOS__`], {
         AWS_DEFAULT_REGION: this.aws.region,
         STACK_NAME_PREFIX: this.stackNamePrefix,
         PACKAGE_LAYOUT_VERSION: this.packages.majorVersion(),
-        // Unset CI because we need to distinguish stdout/stderr and this variable
-        // makes everything go to stdout
-        CI: undefined,
+        // In these tests we want to make a distinction between stdout and sterr
+        CI: 'false',
         ...options.modEnv,
       },
     });
