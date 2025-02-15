@@ -355,7 +355,8 @@ export class TestFixture extends ShellHelper {
       ...(options.options ?? []),
       // use events because bar renders bad in tests
       '--progress', 'events',
-      ...(skipStackRename ? stackNames : this.fullStackName(stackNames))], options);
+      ...(skipStackRename ? stackNames : this.fullStackName(stackNames)),
+    ];
   }
 
   public async cdkSynth(options: CdkCliOptions = {}) {

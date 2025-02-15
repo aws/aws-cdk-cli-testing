@@ -183,6 +183,7 @@ const cliInteg = configureProject(
       '@aws-sdk/credential-providers@^3',
       '@smithy/util-retry@^3',
       '@smithy/types@^3',
+      '@cdklabs/cdk-atmosphere-client',
       'axios@^1',
       'chalk@^4',
       'fs-extra@^9',
