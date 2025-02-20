@@ -139,6 +139,12 @@ const repo = configureProject(
       }),
     },
 
+    depsUpgradeOptions: {
+      workflowOptions: {
+        schedule: pj.javascript.UpgradeDependenciesSchedule.WEEKLY,
+      },
+    },
+
     githubOptions: {
       mergeQueue: true,
       pullRequestLintOptions: {
