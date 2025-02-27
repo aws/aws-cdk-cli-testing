@@ -22,6 +22,7 @@ MAJOR_VERSIONS.forEach(MV => {
       const repositoryName = `cdk-hnb659fds-container-assets-${account}-${region}`;
 
       const imageDir = 'imagedir';
+      await fs.mkdir(path.join(fixture.integTestDir, imageDir), { recursive: true });
 
       // Write an asset file and a data file for the Docker image
       const assetFile = 'testfile.txt';
@@ -30,7 +31,6 @@ MAJOR_VERSIONS.forEach(MV => {
       }
 
       // Write a Dockerfile for the image build with a data file in it
-      await fs.mkdir(path.join(fixture.integTestDir, imageDir), { recursive: true });
       await fs.writeFile(path.join(fixture.integTestDir, imageDir, 'Dockerfile'), [
         'FROM scratch',
         'ADD datafile.txt datafile.txt',
