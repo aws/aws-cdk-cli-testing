@@ -109,7 +109,7 @@ const repo = configureProject(
       devdirs: ['test'],
       ignorePatterns: ['resources/**/*.ts'],
     },
-    
+
     vscodeWorkspace: true,
     vscodeWorkspaceOptions: {
       includeRootWorkspace: true,
@@ -238,6 +238,7 @@ new CdkCliIntegTestsWorkflow(repo, {
   testEnvironment: TEST_ENVIRONMENT,
   testRunsOn: TEST_RUNNER,
   localPackages: [cliInteg.name],
+  expectNewCliLibVersion: true,
 });
 
 repo.synth();
