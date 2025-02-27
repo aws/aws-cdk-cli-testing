@@ -105,23 +105,16 @@ const repo = configureProject(
     ],
 
     eslintOptions: {
-      // prettier: true,
       dirs: ['lib'],
       devdirs: ['test'],
       ignorePatterns: ['resources/**/*.ts'],
     },
 
-    /*
-    // Too many files don't match prettier
-    prettier: true,
-    prettierOptions: {
-      settings: {
-        printWidth: 120,
-        singleQuote: true,
-        trailingComma: pj.javascript.TrailingComma.ALL,
-      },
+    vscodeWorkspace: true,
+    vscodeWorkspaceOptions: {
+      includeRootWorkspace: true,
     },
-    */
+
     workflowNodeVersion: 'lts/*',
     workflowRunsOn,
     gitignore: ['.DS_Store'],
@@ -245,6 +238,7 @@ new CdkCliIntegTestsWorkflow(repo, {
   testEnvironment: TEST_ENVIRONMENT,
   testRunsOn: TEST_RUNNER,
   localPackages: [cliInteg.name],
+  expectNewCliLibVersion: true,
 });
 
 repo.synth();

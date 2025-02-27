@@ -14,6 +14,7 @@
     ".projen/deps.json",
     ".projen/files.json",
     ".projen/tasks.json",
+    "aws-cdk-cli-testing.code-workspace",
     "LICENSE",
     "tsconfig.dev.json",
     "tsconfig.json"
