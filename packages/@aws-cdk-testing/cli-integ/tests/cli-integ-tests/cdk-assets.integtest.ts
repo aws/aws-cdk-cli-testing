@@ -24,8 +24,9 @@ MAJOR_VERSIONS.forEach(MV => {
       const imageDir = 'imagedir';
 
       // Write an asset file and a data file for the Docker image
-      for (const assetFile of ['testfile.txt', `${imageDir}/datafile.txt`]) {
-        await fs.writeFile(path.join(fixture.integTestDir, assetFile), 'some asset file');
+      const assetFile = 'testfile.txt';
+      for (const toCreate of [assetFile, `${imageDir}/datafile.txt`]) {
+        await fs.writeFile(path.join(fixture.integTestDir, toCreate), 'some asset file');
       }
 
       // Write a Dockerfile for the image build with a data file in it
