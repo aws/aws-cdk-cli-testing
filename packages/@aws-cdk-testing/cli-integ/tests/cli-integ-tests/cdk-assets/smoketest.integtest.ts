@@ -3,7 +3,7 @@
  */
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { integTest, withDefaultFixture } from '../../lib';
+import { integTest, withDefaultFixture } from '../../../lib';
 
 jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime
 
@@ -11,7 +11,7 @@ const MAJOR_VERSIONS = ['2', 'v3-latest'];
 
 MAJOR_VERSIONS.forEach(MV => {
   integTest(
-    `cdk-assets@${MV}`,
+    `cdk-assets@${MV} smoke test`,
     withDefaultFixture(async (fixture) => {
       await fixture.shell(['npm', 'init', '-y']);
       await fixture.shell(['npm', 'install', `cdk-assets@${MV}`]);
