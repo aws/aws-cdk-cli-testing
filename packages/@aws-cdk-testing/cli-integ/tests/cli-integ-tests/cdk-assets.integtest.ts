@@ -7,7 +7,7 @@ import { integTest, withDefaultFixture } from '../../lib';
 
 jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime
 
-const MAJOR_VERSIONS = ['2', '3'];
+const MAJOR_VERSIONS = ['2', 'v3-latest'];
 
 MAJOR_VERSIONS.forEach(MV => {
   integTest(
@@ -21,14 +21,19 @@ MAJOR_VERSIONS.forEach(MV => {
       const bucketName = `cdk-hnb659fds-assets-${account}-${region}`;
       const repositoryName = `cdk-hnb659fds-container-assets-${account}-${region}`;
 
-      // Write a Dockerfile for the image build
       const imageDir = 'imagedir';
-      await fs.mkdir(path.join(fixture.integTestDir, imageDir), { recursive: true });
-      await fs.writeFile(path.join(fixture.integTestDir, imageDir, 'Dockerfile'), 'FROM scratch');
 
-      // Write an asset file to upload
-      const assetFile = 'testfile.txt';
-      await fs.writeFile(path.join(fixture.integTestDir, assetFile), 'some asset file');
+      // Write an asset file and a data file for the Docker image
+      for (const assetFile of ['testfile.txt', `${imageDir}/datafile.txt`]) {
+        await fs.writeFile(path.join(fixture.integTestDir, assetFile), 'some asset file');
+      }
+
+      // Write a Dockerfile for the image build with a data file in it
+      await fs.mkdir(path.join(fixture.integTestDir, imageDir), { recursive: true });
+      await fs.writeFile(path.join(fixture.integTestDir, imageDir, 'Dockerfile'), [
+        'FROM scratch',
+        'ADD datafile.txt datafile.txt',
+      ].join('\n'));
 
       // Write an asset JSON file to publish to the bootstrapped environment
       const assetsJson = {
