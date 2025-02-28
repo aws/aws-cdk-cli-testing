@@ -101,7 +101,7 @@ const repo = configureProject(
 
     defaultReleaseBranch: 'main',
     devDeps: [
-      'cdklabs-projen-project-types@^0.1.219',
+      'cdklabs-projen-project-types',
     ],
 
     eslintOptions: {
@@ -233,12 +233,12 @@ for (const compiledDir of compiledDirs) {
 cliInteg.gitignore.addPatterns('!resources/**/*.js');
 
 new CdkCliIntegTestsWorkflow(repo, {
+  sourceRepo: 'aws/aws-cdk-cli-testing',
   approvalEnvironment: APPROVAL_ENVIRONMENT,
   buildRunsOn: workflowRunsOn[0],
   testEnvironment: TEST_ENVIRONMENT,
   testRunsOn: TEST_RUNNER,
   localPackages: [cliInteg.name],
-  expectNewCliLibVersion: true,
 });
 
 repo.synth();
