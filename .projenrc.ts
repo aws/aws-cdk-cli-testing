@@ -233,12 +233,12 @@ for (const compiledDir of compiledDirs) {
 cliInteg.gitignore.addPatterns('!resources/**/*.js');
 
 new CdkCliIntegTestsWorkflow(repo, {
+  sourceRepo: 'aws/aws-cdk-cli-testing',
   approvalEnvironment: APPROVAL_ENVIRONMENT,
   buildRunsOn: workflowRunsOn[0],
   testEnvironment: TEST_ENVIRONMENT,
   testRunsOn: TEST_RUNNER,
   localPackages: [cliInteg.name],
-  expectNewCliLibVersion: true,
 });
 
 repo.synth();
