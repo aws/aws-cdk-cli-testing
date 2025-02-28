@@ -2967,3 +2967,13 @@ integTest('requests go through a proxy when configured',
     }
   }),
 );
+
+integTest(
+  'output Annotations as objects with tokens',
+  withSpecificFixture('annotations-app', async (fixture) => {
+    const synthOutput = await fixture.cdk(['synth', fixture.fullStackName('annotations')], {
+      captureStderr: true,
+    });
+    expect(synthOutput).toContain('{"Fn::Join":["",["stackId: ",{"Ref":"AWS::StackId"}]]}');
+  }),
+);
