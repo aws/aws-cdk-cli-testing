@@ -2967,3 +2967,19 @@ integTest('requests go through a proxy when configured',
     }
   }),
 );
+
+integTest(
+  'can return dummy value from lookup',
+  withSpecificFixture('from-lookup-dummy', async (fixture) => {
+    await fixture.cdk(['synth', fixture.fullStackName('from-lookup-dummy')]);
+    expect(fixture.template('from-lookup-dummy')).toEqual(
+      expect.objectContaining({
+        Outputs: {
+          Arn: {
+            Value: 'arn:aws:iam::123456789012:role/DUMMY_ARN',
+          },
+        },
+      }),
+    );
+  }),
+);
