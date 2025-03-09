@@ -49,7 +49,6 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       stdout.push(chunk);
 
       const interaction = interact.shift();
-
       if (interaction) {
 
         if (child.stdin == null) {
@@ -60,7 +59,6 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
           // subprocess expects a user input now
           child.stdin.write(interaction.input);
         }
-
         if (interact.length === 0) {
           // terminate stdin on the last interaction
           child.stdin.end();
