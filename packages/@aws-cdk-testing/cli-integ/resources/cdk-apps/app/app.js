@@ -833,7 +833,7 @@ class MetadataStack extends cdk.Stack {
 class LookupDummyStack extends cdk.Stack {
   constructor(parent, id, props) {
     super(parent, id, props);
-    const response = cdk.ContextProvider.getValue(scope, {
+    const response = cdk.ContextProvider.getValue(this, {
       provider: 'cc-api-provider',
       props: {
         typeName: 'AWS::IAM::Role',
