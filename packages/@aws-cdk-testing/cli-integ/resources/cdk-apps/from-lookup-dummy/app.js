@@ -11,7 +11,7 @@ class TestStack extends cdk.Stack {
     super(scope, id, props);
 
     const response = cdk.ContextProvider.getValue(scope, {
-      provider: cxschema.ContextProvider.CC_API_PROVIDER,
+      provider: 'cc-api-provider',
       props: {
         typeName: 'AWS::IAM::Role',
         exactIdentifier: 'DUMMY_ID',
