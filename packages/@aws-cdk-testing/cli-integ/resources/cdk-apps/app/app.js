@@ -959,7 +959,8 @@ switch (stackSet) {
 
     new MetadataStack(app, `${stackPrefix}-metadata`);
 
-    new LookupDummyStack(app, `${stackPrefix}-lookup-dummy`);
+    const env = { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION };
+    new LookupDummyStack(app, `${stackPrefix}-lookup-dummy`, { env });
     break;
 
   case 'stage-using-context':
