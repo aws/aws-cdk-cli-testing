@@ -830,6 +830,33 @@ class MetadataStack extends cdk.Stack {
   }
 }
 
+class LookupDummyStack extends cdk.Stack {
+  constructor(parent, id, props) {
+    super(parent, id, props);
+    const response = cdk.ContextProvider.getValue(scope, {
+      provider: 'cc-api-provider',
+      props: {
+        typeName: 'AWS::IAM::Role',
+        exactIdentifier: 'DUMMY_ID',
+        propertiesToReturn: [
+          'Arn',
+        ],
+      },
+      ignoreErrorOnMissingContext: true,
+      dummyValue: [
+        {
+          Arn: 'arn:aws:iam::123456789012:role/DUMMY_ARN',
+        },
+      ],
+    }).value;
+
+    const dummy = response[0];
+    new cdk.CfnOutput(this, 'Output', {
+      value: dummy.Arn,
+    });
+  }
+}
+
 const app = new cdk.App({
   context: {
     '@aws-cdk/core:assetHashSalt': process.env.CODEBUILD_BUILD_ID ?? process.env.GITHUB_RUN_ID, // Force all assets to be unique, but consistent in one build
@@ -931,6 +958,8 @@ switch (stackSet) {
     new BundlingStage(app, `${stackPrefix}-bundling-stage`);
 
     new MetadataStack(app, `${stackPrefix}-metadata`);
+
+    new LookupDummyStack(app, `${stackPrefix}-lookup-dummy`);
     break;
 
   case 'stage-using-context':
