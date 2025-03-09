@@ -32,7 +32,7 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
     env,
     // Need this for Windows where we want .cmd and .bat to be found as well.
     shell: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: [options.interact ? 'pipe' : 'ignore', 'pipe', 'pipe'],
   });
 
   return new Promise<string>((resolve, reject) => {
@@ -44,6 +44,26 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
         writeToOutputs(chunk);
       }
       stdout.push(chunk);
+
+      if (options.interact) {
+
+        if (child.stdin == null) {
+          throw new Error('User interaction configured but child process has no stdin');
+        }
+
+        for (const [i, interaction] of options.interact.entries()) {
+          if (interaction.prompt.test(chunk)) {
+            // shell process now expects a user input
+            child.stdin.write(interaction.input);
+          }
+          if (i === options.interact.length - 1) {
+            // terminate stdin on the last interaction
+            child.stdin.end();
+          }
+        }
+
+      }
+
     });
 
     child.stderr!.on('data', chunk => {
@@ -71,6 +91,21 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       }
     });
   });
+}
+
+/**
+ * Models a single user interaction with the shell.
+ */
+export interface UserInteraction {
+  /**
+   * The prompt to expect. Regex matched against a line
+   * of stdout in the subprocess.
+   */
+  readonly prompt: RegExp;
+  /**
+   * The input to provide.
+   */
+  readonly input: string;
 }
 
 export interface ShellOptions extends child_process.SpawnOptions {
@@ -112,6 +147,14 @@ export interface ShellOptions extends child_process.SpawnOptions {
    * @default always
    */
   readonly show?: 'always' | 'never' | 'error';
+
+  /**
+   * Provide user interaction to respond to shell prompts.
+   *
+   * Order should correspond to the expected order or prompts.
+   */
+  readonly interact?: UserInteraction[];
+
 }
 
 export class ShellHelper {
