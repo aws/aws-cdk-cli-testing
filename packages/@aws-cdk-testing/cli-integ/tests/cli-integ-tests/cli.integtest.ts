@@ -2971,8 +2971,8 @@ integTest('requests go through a proxy when configured',
 integTest(
   'can return dummy value from lookup',
   withDefaultFixture(async (fixture) => {
-    await fixture.cdk(['synth', fixture.fullStackName('from-lookup-dummy')]);
-    expect(fixture.template('from-lookup-dummy')).toEqual(
+    await fixture.cdk(['synth', fixture.fullStackName('lookup-dummy')]);
+    expect(fixture.template('lookup-dummy')).toEqual(
       expect.objectContaining({
         Outputs: {
           Arn: {
