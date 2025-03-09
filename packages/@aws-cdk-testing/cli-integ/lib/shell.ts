@@ -27,12 +27,15 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
 
   const env = options.env ?? (options.modEnv ? { ...process.env, ...options.modEnv } : process.env);
 
+  // copy because we will be shifting it
+  const interact = [...(options.interact ?? [])];
+
   const child = child_process.spawn(command[0], command.slice(1), {
     ...options,
     env,
     // Need this for Windows where we want .cmd and .bat to be found as well.
     shell: true,
-    stdio: [options.interact ? 'pipe' : 'ignore', 'pipe', 'pipe'],
+    stdio: [interact.length > 0 ? 'pipe' : 'ignore', 'pipe', 'pipe'],
   });
 
   return new Promise<string>((resolve, reject) => {
@@ -45,21 +48,22 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       }
       stdout.push(chunk);
 
-      if (options.interact) {
+      const interaction = interact.shift();
+
+      if (interaction) {
 
         if (child.stdin == null) {
           throw new Error('User interaction configured but child process has no stdin');
         }
 
-        for (const [i, interaction] of options.interact.entries()) {
-          if (interaction.prompt.test(chunk)) {
-            // shell process now expects a user input
-            child.stdin.write(interaction.input);
-          }
-          if (i === options.interact.length - 1) {
-            // terminate stdin on the last interaction
-            child.stdin.end();
-          }
+        if (interaction.prompt.test(chunk)) {
+          // subprocess expects a user input now
+          child.stdin.write(interaction.input);
+        }
+
+        if (interact.length === 0) {
+          // terminate stdin on the last interaction
+          child.stdin.end();
         }
 
       }
@@ -151,7 +155,7 @@ export interface ShellOptions extends child_process.SpawnOptions {
   /**
    * Provide user interaction to respond to shell prompts.
    *
-   * Order should correspond to the expected order or prompts.
+   * Order and count should correspond to the expected prompts issued by the subprocess.
    */
   readonly interact?: UserInteraction[];
 
