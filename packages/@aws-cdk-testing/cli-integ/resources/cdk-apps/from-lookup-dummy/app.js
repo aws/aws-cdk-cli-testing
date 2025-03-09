@@ -1,5 +1,4 @@
 const cdk = require('aws-cdk-lib/core');
-const cxschema = require('@aws-cdk/cloud-assembly-schema');
 
 const stackPrefix = process.env.STACK_NAME_PREFIX;
 if (!stackPrefix) {
