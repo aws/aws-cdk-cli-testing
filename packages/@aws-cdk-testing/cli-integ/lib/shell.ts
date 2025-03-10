@@ -27,12 +27,15 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
 
   const env = options.env ?? (options.modEnv ? { ...process.env, ...options.modEnv } : process.env);
 
+  // copy because we will be shifting it
+  const interact = [...(options.interact ?? [])];
+
   const child = child_process.spawn(command[0], command.slice(1), {
     ...options,
     env,
     // Need this for Windows where we want .cmd and .bat to be found as well.
     shell: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: [interact.length > 0 ? 'pipe' : 'ignore', 'pipe', 'pipe'],
   });
 
   return new Promise<string>((resolve, reject) => {
@@ -44,6 +47,25 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
         writeToOutputs(chunk);
       }
       stdout.push(chunk);
+
+      const interaction = interact.shift();
+      if (interaction) {
+
+        if (child.stdin == null) {
+          throw new Error('User interaction configured but child process has no stdin');
+        }
+
+        if (interaction.prompt.test(chunk)) {
+          // subprocess expects a user input now
+          child.stdin.write(interaction.input);
+        }
+        if (interact.length === 0) {
+          // terminate stdin on the last interaction
+          child.stdin.end();
+        }
+
+      }
+
     });
 
     child.stderr!.on('data', chunk => {
@@ -71,6 +93,21 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       }
     });
   });
+}
+
+/**
+ * Models a single user interaction with the shell.
+ */
+export interface UserInteraction {
+  /**
+   * The prompt to expect. Regex matched against a line
+   * of stdout in the subprocess.
+   */
+  readonly prompt: RegExp;
+  /**
+   * The input to provide.
+   */
+  readonly input: string;
 }
 
 export interface ShellOptions extends child_process.SpawnOptions {
@@ -112,6 +149,14 @@ export interface ShellOptions extends child_process.SpawnOptions {
    * @default always
    */
   readonly show?: 'always' | 'never' | 'error';
+
+  /**
+   * Provide user interaction to respond to shell prompts.
+   *
+   * Order and count should correspond to the expected prompts issued by the subprocess.
+   */
+  readonly interact?: UserInteraction[];
+
 }
 
 export class ShellHelper {

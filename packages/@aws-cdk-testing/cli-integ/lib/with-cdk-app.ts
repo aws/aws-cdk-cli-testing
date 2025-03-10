@@ -199,6 +199,10 @@ export interface CdkCliOptions extends ShellOptions {
   verbose?: boolean;
 }
 
+export interface CdkDestroyCliOptions extends CdkCliOptions {
+  readonly force?: boolean;
+}
+
 /**
  * Prepare a target dir byreplicating a source directory
  */
@@ -366,11 +370,14 @@ export class TestFixture extends ShellHelper {
     ], options);
   }
 
-  public async cdkDestroy(stackNames: string | string[], options: CdkCliOptions = {}) {
+  public async cdkDestroy(stackNames: string | string[], options: CdkDestroyCliOptions = {}) {
     stackNames = typeof stackNames === 'string' ? [stackNames] : stackNames;
 
+    // default to true because most tests don't test user interaction
+    const force = options.force ?? true;
+
     return this.cdk(['destroy',
-      '-f', // We never want a prompt in an unattended test
+      ...(force ? ['-f'] : []), // pass -f if user interaction is not desired
       ...(options.options ?? []),
       ...this.fullStackName(stackNames)], options);
   }
