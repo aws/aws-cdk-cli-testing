@@ -76,6 +76,9 @@ MAJOR_VERSIONS.forEach(MV => {
       await fixture.shell(['npx', 'cdk-assets', '--path', 'assets.json', '--verbose', 'publish'], {
         modEnv: {
           ...fixture.cdkShellEnv(),
+          // This is necessary for cdk-assets v2, if the credentials are supplied via
+          // config file (which they are on the CodeBuild canaries).
+          AWS_SDK_LOAD_CONFIG: '1',
         },
       });
     }),
