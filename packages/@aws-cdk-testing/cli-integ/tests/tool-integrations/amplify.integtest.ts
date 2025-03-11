@@ -17,7 +17,8 @@ integTest('amplify integration', withToolContext(async (context) => {
   await shell.shell(['npm', 'init', '-y']);
   await shell.shell(['npm', 'install', '--save-dev', 'create-amplify@latest']);
   // This will create 'package.json' implicating a certain version of the CDK
-  await updateCdkDependency(context, context.packages.requestedCliVersion(), context.packages.requestedFrameworkVersion());
+  await shell.shell(['npm', 'config', 'set', 'save-exact', 'true']);
+  await mutateAmplifyDepOnCdk(context, context.packages.requestedCliVersion(), context.packages.requestedFrameworkVersion());
 
   ////////////////////////////////////////////////////////////////////////
   //  Run the `npm create` workflow
@@ -46,18 +47,28 @@ integTest('amplify integration', withToolContext(async (context) => {
   }
 }), TIMEOUT);
 
-async function updateCdkDependency(context: TemporaryDirectoryContext, cliVersion: string, libVersion: string) {
-  const filename = path.join(context.integTestDir, 'node_modules', 'create-amplify', 'lib', 'default_packages.json');
-  const pj: unknown = JSON.parse(await fs.readFile(filename, { encoding: 'utf-8' }));
+async function mutateAmplifyDepOnCdk(context: TemporaryDirectoryContext, cliVersion: string, libVersion: string) {
+  // default_packages.json is where create-amplify reads when installing npm dependencies
+  const amplifyDepFile = path.join(context.integTestDir, 'node_modules', 'create-amplify', 'lib', 'default_packages.json');
+  const amplifyDepJson: unknown = JSON.parse(await fs.readFile(amplifyDepFile, { encoding: 'utf-8' }));
 
   // Be extra paranoid about the types here, since we don't fully control them
-  assertIsObject(pj);
-  assertIsStringArray(pj.defaultDevPackages);
+  assertIsObject(amplifyDepJson);
+  assertIsStringArray(amplifyDepJson.defaultDevPackages);
 
-  replacePackageVersionIn('aws-cdk', cliVersion, pj.defaultDevPackages);
-  replacePackageVersionIn('aws-cdk-lib', libVersion, pj.defaultDevPackages);
+  replacePackageVersionIn('aws-cdk', cliVersion, amplifyDepJson.defaultDevPackages);
+  replacePackageVersionIn('aws-cdk-lib', libVersion, amplifyDepJson.defaultDevPackages);
 
-  await fs.writeFile(filename, JSON.stringify(pj, undefined, 2), { encoding: 'utf-8' });
+  await fs.writeFile(amplifyDepFile, JSON.stringify(amplifyDepJson, undefined, 2), { encoding: 'utf-8' });
+
+  const packageJsonFile = path.join(context.integTestDir, 'package.json');
+  const packageJson: unknown = JSON.parse(await fs.readFile(packageJsonFile, { encoding: 'utf-8' }));
+
+  assertIsObject(packageJson);
+  packageJson["overrides"] = {
+    "aws-cdk-lib": libVersion,
+  };
+  await fs.writeFile(packageJsonFile, JSON.stringify(packageJson, undefined, 2), { encoding: 'utf-8' })
 }
 
 /**
