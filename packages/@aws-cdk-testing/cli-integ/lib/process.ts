@@ -22,6 +22,11 @@ export interface IProcess {
   onExit(callback: (exitCode: number) => void): void;
 
   /**
+   * Register a callback to be invoked if the process failed to start.
+   */
+  onError(callback: (error: Error) => void): void;
+
+  /**
    * Write the process stdin stream.
    */
   writeStdin(data: string): void;
@@ -73,6 +78,10 @@ class PtyProcess implements IProcess {
 
   public constructor(private readonly process: pty.IPty) {}
 
+  public onError(_: (error: Error) => void): void {
+    // not needed because the pty.spawn will simply fail in this case.
+  }
+
   public onStdout(callback: (chunk: Buffer) => void): void {
     this.process.onData((e) => callback(Buffer.from(e)));
   }
@@ -86,6 +95,7 @@ class PtyProcess implements IProcess {
     this.process.onExit((e) => { callback(e.exitCode) });
   }
 
+
   public writeStdin(data: string): void {
     // in a pty all streams are the same
     this.process.write(data)
@@ -96,6 +106,10 @@ class PtyProcess implements IProcess {
 class NonPtyProcess implements IProcess {
 
   public constructor(private readonly process: child.ChildProcess) {}
+
+  public onError(callback: (error: Error) => void): void {
+    this.process.once('error', callback);
+  }
 
   public onStdout(callback: (chunk: Buffer) => void): void {
     if (this.process.stdout == null) {

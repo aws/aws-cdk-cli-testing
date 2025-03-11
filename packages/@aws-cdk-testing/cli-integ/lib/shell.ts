@@ -74,7 +74,7 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       }
     });
 
-    // child.once('error', reject);
+    child.onError(reject);
 
     child.onExit(code => {
       const stderrOutput = Buffer.concat(stderr).toString('utf-8');

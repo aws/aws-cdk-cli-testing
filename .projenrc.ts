@@ -207,8 +207,6 @@ const cliInteg = configureProject(
       '@types/yargs@^15',
       '@types/fs-extra@^9',
       '@types/glob@^7',
-      '@types/promptly',
-      'promptly',
     ],
     bin: {
       'run-suite': 'bin/run-suite',

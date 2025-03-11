@@ -43,7 +43,6 @@
     "@types/glob": "^7",
     "@types/jest": "^29.5.14",
     "@types/node": "^16",
-    "@types/promptly": "^3.0.5",
     "@types/semver": "^7",
     "@types/yargs": "^15",
     "@typescript-eslint/eslint-plugin": "^8",
@@ -60,7 +59,6 @@
     "jest-junit": "^16",
     "prettier": "^2.8",
     "projen": "^0.91.14",
-    "promptly": "^3.2.0",
     "ts-jest": "^29.2.5",
     "typescript": "5.6"
   },
