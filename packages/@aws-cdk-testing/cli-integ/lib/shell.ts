@@ -28,37 +28,37 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
   const show = options.show ?? 'always';
 
   const env = options.env ?? (options.modEnv ? { ...process.env, ...options.modEnv } : process.env);
-
-  // copy because we will be shifting it
-  const interact = [...(options.interact ?? [])];
+  const tty = options.interact && options.interact.length > 0;
 
   const child = Process.spawn(command[0], command.slice(1), {
     ...options,
     env,
-    tty: interact.length > 0,
+    tty,
   })
+
+  // copy because we will be shifting it
+  const remainingInteractions = [...(options.interact ?? [])];
 
   return new Promise<string>((resolve, reject) => {
     const stdout = new Array<Buffer>();
     const stderr = new Array<Buffer>();
 
-    const stdoutSinceLastPrompt = new Array<Buffer>();
+    const lastLine = new LastLine();
 
     child.onStdout(chunk => {
       if (show === 'always') {
         writeToOutputs(chunk.toString('utf-8'));
       }
       stdout.push(chunk);
-      stdoutSinceLastPrompt.push(chunk);
+      lastLine.add(chunk.toString('utf-8'));
 
-      const interaction = interact[0];
+      const interaction = remainingInteractions[0];
       if (interaction) {
 
-        if (interaction.prompt.test(Buffer.concat(stdoutSinceLastPrompt).toString('utf-8'))) {
+        if (interaction.prompt.test(lastLine.get())) {
           // subprocess expects a user input now
-          child.writeStdin(interaction.input + os.EOL);
-          interact.shift();
-          stdoutSinceLastPrompt.splice(0);
+          child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
+          remainingInteractions.shift();
         }
 
       }
@@ -80,13 +80,25 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       const stderrOutput = Buffer.concat(stderr).toString('utf-8');
       const stdoutOutput = Buffer.concat(stdout).toString('utf-8');
       const out = (options.onlyStderr ? stderrOutput : stdoutOutput + stderrOutput).trim();
-      if (code === 0 || options.allowErrExit) {
-        resolve(out);
-      } else {
+
+      const logAndreject = (error: Error) => {
         if (show === 'error') {
           writeToOutputs(`${out}\n`);
         }
-        reject(new Error(`'${command.join(' ')}' exited with error code ${code}.`));
+        reject(error);
+      }
+
+      if (remainingInteractions.length !== 0) {
+        // regardless of the exit code, if we didn't consume all expected interactions we probably
+        // did somethiing wrong.
+        logAndreject(new Error(`Expected more user interactions but subprocess exited with ${code}`));
+        return;
+      }
+
+      if (code === 0 || options.allowErrExit) {
+        resolve(out);
+      } else {
+        logAndreject(new Error(`'${command.join(' ')}' exited with error code ${code}.`));
       }
     });
   });
@@ -107,6 +119,13 @@ export interface UserInteraction {
    * The input to provide.
    */
   readonly input: string;
+
+  /**
+   * The string to signal the end of input.
+   *
+   * @default os.EOL
+   */
+  readonly end?: string;
 }
 
 export interface ShellOptions extends child_process.SpawnOptions {
@@ -216,4 +235,41 @@ export function addToShellPath(x: string) {
   }
 
   process.env.PATH = parts.join(':');
+}
+
+/**
+ * Accumulate text since the last line break (or beginning of string) it has seen in the chunks.
+ *
+ * Examples:
+ *
+ * - Chunks: ['one\n', 'two\n', three']
+ * - Last Line: 'three'
+ *
+ * - Chunks: ['one', 'two', '\nthree']
+ * - Last Line: 'three'
+ *
+ * - Chunks: ['one', 'two']
+ * - Last Line: 'onetwo'
+ *
+ * - Chunks: ['one', 'two', '\nthree', 'four']
+ * - Last Line: 'threefour'
+ */
+class LastLine {
+
+  private lastLine: string = '';
+
+  public add(chunk: string): void {
+    const lines = chunk.split(os.EOL);
+    if (lines.length === 1) {
+      // chunk doesn't contain a new line so just append
+      this.lastLine += lines[0];
+    } else {
+      // chunk contains multiple lines so just override with the last one
+      this.lastLine = lines[lines.length - 1];
+    }
+  }
+
+  public get(): string {
+    return this.lastLine;
+  }
 }

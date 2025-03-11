@@ -1,3 +1,4 @@
+import * as os from 'os';
 import { DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
 import { integTest, withDefaultFixture } from '../../lib';
 
