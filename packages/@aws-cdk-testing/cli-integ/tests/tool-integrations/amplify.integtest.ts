@@ -65,7 +65,7 @@ async function mutateAmplifyDepOnCdk(context: TemporaryDirectoryContext, cliVers
   const packageJson: unknown = JSON.parse(await fs.readFile(packageJsonFile, { encoding: 'utf-8' }));
 
   assertIsObject(packageJson);
-  packageJson["overrides"] = {
+  packageJson.overrides = {
     "aws-cdk-lib": libVersion,
   };
   await fs.writeFile(packageJsonFile, JSON.stringify(packageJson, undefined, 2), { encoding: 'utf-8' })
