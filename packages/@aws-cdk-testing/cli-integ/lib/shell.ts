@@ -30,11 +30,15 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
   const env = options.env ?? (options.modEnv ? { ...process.env, ...options.modEnv } : process.env);
   const tty = options.interact && options.interact.length > 0;
 
-  const child = Process.spawn(command[0], command.slice(1), {
-    ...options,
-    env,
-    tty,
-  })
+  // Coerce to `any` because `ShellOptions` contains custom properties
+  // that don't exist in the underlying interfaces. We could either rebuild each options map,
+  // or just pass through and let the underlying implemenation ignore what it doesn't know about.
+  // We choose the lazy one.
+  const spawnOptions = { ...options, env } as any;
+
+  const child = tty
+    ? Process.spawnTTY(command[0], command.slice(1), spawnOptions)
+    : Process.spawn(command[0], command.slice(1), spawnOptions)
 
   // copy because we will be shifting it
   const remainingInteractions = [...(options.interact ?? [])];

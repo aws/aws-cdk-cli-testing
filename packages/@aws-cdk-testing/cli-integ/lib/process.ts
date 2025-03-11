@@ -33,36 +33,25 @@ export interface IProcess {
 
 };
 
-export interface ProcessSpawnOptions {
-  /**
-   * Start a TTY enabled process. Should be used when starting an interactive process.
-   *
-   * @default false
-   */
-  readonly tty?: boolean;
-
-  /**
-   * Allow any option to pass through to the underlying implementation.
-   *
-   * It's tricky to create a common interface because options can vary quite significantly
-   * between a tty and a non tty process.
-   */
-  [key: string]: any;
-}
-
 export class Process {
 
-  public static spawn(command: string, args: string[], options: ProcessSpawnOptions = {}): IProcess {
+  /**
+   * Spawn a process with a TTY attached.
+   */
+  public static spawnTTY(command: string, args: string[], options: pty.IPtyForkOptions | pty.IWindowsPtyForkOptions) {
 
-    const tty = options.tty ?? false;
+    const process = pty.spawn(command, args, {
+      name: 'xterm-color',
+      ...options,
+    })
+    return new PtyProcess(process);
 
-    if (tty) {
-      const process = pty.spawn(command, args, {
-        name: 'xterm-color',
-        ...options,
-      })
-      return new PtyProcess(process);
-    }
+  }
+
+  /**
+   * Spawn a process without a forcing a TTY.
+   */
+  public static spawn(command: string, args: string[], options: child.SpawnOptionsWithoutStdio) {
 
     const process = child.spawn(command, args, {
       shell: true,
@@ -72,6 +61,7 @@ export class Process {
     return new NonPtyProcess(process);
 
   }
+
 }
 
 class PtyProcess implements IProcess {
