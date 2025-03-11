@@ -28,6 +28,10 @@
       "type": "build"
     },
     {
+      "name": "@types/promptly",
+      "type": "build"
+    },
+    {
       "name": "@types/semver",
       "version": "^7",
       "type": "build"
@@ -98,6 +102,10 @@
     },
     {
       "name": "projen",
+      "type": "build"
+    },
+    {
+      "name": "promptly",
       "type": "build"
     },
     {
@@ -221,6 +229,10 @@
     {
       "name": "mockttp",
       "version": "^3",
+      "type": "runtime"
+    },
+    {
+      "name": "node-pty",
       "type": "runtime"
     },
     {

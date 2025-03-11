@@ -1,5 +1,6 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { TestContext } from './integ-test';
 import { TemporaryDirectoryContext } from './with-temporary-directory';
@@ -42,24 +43,36 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
     const stdout = new Array<Buffer>();
     const stderr = new Array<Buffer>();
 
+    const stdoutSinceLastPrompt = new Array<Buffer>();
+
     child.stdout!.on('data', chunk => {
       if (show === 'always') {
         writeToOutputs(chunk);
       }
       stdout.push(chunk);
+      stdoutSinceLastPrompt.push(chunk);
+      const toCheckAgainst = Buffer.concat(stdoutSinceLastPrompt).toString('utf-8');
 
-      const interaction = interact.shift();
+      if (child.stdin) {
+        console.log(`Stdout since last interaction: ${toCheckAgainst}`);
+      }
+
+      const interaction = interact[0];
       if (interaction) {
 
         if (child.stdin == null) {
           throw new Error('User interaction configured but child process has no stdin');
         }
 
-        if (interaction.prompt.test(chunk)) {
+        if (interaction.prompt.test(Buffer.concat(stdoutSinceLastPrompt).toString('utf-8'))) {
+          console.log(`Output (${toCheckAgainst}) matched with prompt (${interaction.prompt}). Writing ${interaction.input} to child stdin`);
           // subprocess expects a user input now
-          child.stdin.write(interaction.input);
+          child.stdin.write(interaction.input + os.EOL);
+          interact.shift();
+          stdoutSinceLastPrompt.splice(0);
         }
         if (interact.length === 0) {
+          console.log('No more interactions to perform. Ending child stdin pipe.')
           // terminate stdin on the last interaction
           child.stdin.end();
         }
@@ -100,8 +113,10 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
  */
 export interface UserInteraction {
   /**
-   * The prompt to expect. Regex matched against a line
-   * of stdout in the subprocess.
+   * The prompt to expect. Regex matched against the output of the process
+   * since its last prompt (or from process start).
+   *
+   * Most commonly this would be a simple string to match for inclusion.
    */
   readonly prompt: RegExp;
   /**

@@ -13,7 +13,7 @@ integTest('cdk destroy prompts the user for confirmation', withDefaultFixture(as
   await fixture.cdkDestroy(stackName, {
     force: false,
     interact: [
-      { prompt: /^Are you sure you want to delete/, input: 'no' }
+      { prompt: /Are you sure you want to delete/, input: 'no' }
     ]
   });
 
@@ -25,7 +25,7 @@ integTest('cdk destroy prompts the user for confirmation', withDefaultFixture(as
   await fixture.cdkDestroy(stackName, {
     force: false,
     interact: [
-      { prompt: /^Are you sure you want to delete/, input: 'yes' }
+      { prompt: /Are you sure you want to delete/, input: 'yes' }
     ]
   });
 

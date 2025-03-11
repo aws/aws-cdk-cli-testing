@@ -88,8 +88,8 @@ class SsoPermissionSetNoPolicy extends Stack {
     new sso.CfnPermissionSet(this, "permission-set-without-managed-policy", {
       instanceArn: 'arn:aws:sso:::instance/testvalue',
       name: 'testName',
-      permissionsBoundary: { customerManagedPolicyReference: { name: 'why', path: '/how/' }},
-     })
+      permissionsBoundary: { customerManagedPolicyReference: { name: 'why', path: '/how/' } },
+    })
   }
 }
 
@@ -102,38 +102,38 @@ class SsoPermissionSetManagedPolicy extends Stack {
       permissionsBoundary: { managedPolicyArn: 'arn:aws:iam::aws:policy/AdministratorAccess' },
       instanceArn: 'arn:aws:sso:::instance/testvalue',
       name: 'niceWork',
-     })
+    })
   }
 }
 
 class SsoAssignment extends Stack {
   constructor(scope, id) {
     super(scope, id);
-     new sso.CfnAssignment(this, "assignment", {
-       instanceArn: 'arn:aws:sso:::instance/testvalue',
-       permissionSetArn: 'arn:aws:sso:::testvalue',
-       principalId: '11111111-2222-3333-4444-test',
-       principalType: 'USER',
-       targetId: '111111111111',
-       targetType: 'AWS_ACCOUNT'
-     });
+    new sso.CfnAssignment(this, "assignment", {
+      instanceArn: 'arn:aws:sso:::instance/testvalue',
+      permissionSetArn: 'arn:aws:sso:::testvalue',
+      principalId: '11111111-2222-3333-4444-test',
+      principalType: 'USER',
+      targetId: '111111111111',
+      targetType: 'AWS_ACCOUNT'
+    });
   }
 }
 
 class SsoInstanceAccessControlConfig extends Stack {
   constructor(scope, id) {
     super(scope, id);
-     new sso.CfnInstanceAccessControlAttributeConfiguration(this, 'instanceAccessControlConfig', {
-       instanceArn: 'arn:aws:sso:::instance/testvalue',
-       accessControlAttributes: [
-         { key: 'first', value: { source: ['a'] } },
-         { key: 'second', value: { source: ['b'] } },
-         { key: 'third', value: { source: ['c'] } },
-         { key: 'fourth', value: { source: ['d'] } },
-         { key: 'fifth', value: { source: ['e'] } },
-         { key: 'sixth', value: { source: ['f'] } },
-       ]
-     })
+    new sso.CfnInstanceAccessControlAttributeConfiguration(this, 'instanceAccessControlConfig', {
+      instanceArn: 'arn:aws:sso:::instance/testvalue',
+      accessControlAttributes: [
+        { key: 'first', value: { source: ['a'] } },
+        { key: 'second', value: { source: ['b'] } },
+        { key: 'third', value: { source: ['c'] } },
+        { key: 'fourth', value: { source: ['d'] } },
+        { key: 'fifth', value: { source: ['e'] } },
+        { key: 'sixth', value: { source: ['f'] } },
+      ]
+    })
   }
 }
 
@@ -270,7 +270,7 @@ class ImportableStack extends cdk.Stack {
       const bucket = new s3.Bucket(this, 'test-bucket', {
         removalPolicy: (process.env.RETAIN_SINGLE_BUCKET === '1') ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       });
-    
+
       new cdk.CfnOutput(this, 'BucketLogicalId', {
         value: bucket.node.defaultChild.logicalId,
       });
@@ -366,6 +366,16 @@ class OutputsStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'TopicName', {
       value: topic.topicName
     })
+  }
+}
+
+class TwoSnsTopics extends cdk.Stack {
+  constructor(parent, id, props) {
+    super(parent, id, props);
+
+    new sns.Topic(this, 'Topic1');
+    new sns.Topic(this, 'Topic2');
+
   }
 }
 
@@ -471,7 +481,7 @@ class IamRolesStack extends cdk.Stack {
 
     // Environment variabile is used to create a bunch of roles to test
     // that large diff templates are uploaded to S3 to create the changeset.
-    for(let i = 1; i <= Number(process.env.NUMBER_OF_ROLES) ; i++) {
+    for (let i = 1; i <= Number(process.env.NUMBER_OF_ROLES); i++) {
       const role = new iam.Role(this, `Role${i}`, {
         assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       });
@@ -479,7 +489,7 @@ class IamRolesStack extends cdk.Stack {
 
       // For any extra IAM roles created, add a ton of metadata so that the template size is > 50 KiB.
       if (i > 1) {
-        for(let i = 1; i <= 30 ; i++) {
+        for (let i = 1; i <= 30; i++) {
           cfnRole.addMetadata('a'.repeat(1000), 'v');
         }
       }
@@ -847,6 +857,7 @@ const stackSet = process.env.INTEG_STACK_SET || 'default';
 switch (stackSet) {
   case 'default':
     // Deploy all does a wildcard ${stackPrefix}-test-*
+    new TwoSnsTopics(app, `${stackPrefix}-two-sns-topics`);
     new MyStack(app, `${stackPrefix}-test-1`, { env: defaultEnv });
     new YourStack(app, `${stackPrefix}-test-2`);
     new NoticesStack(app, `${stackPrefix}-notices`);

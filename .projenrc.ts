@@ -200,12 +200,15 @@ const cliInteg = configureProject(
       'jest@^29',
       'jest-junit@^15',
       'ts-jest@^29',
+      'node-pty',
     ],
     devDeps: [
       '@types/semver@^7',
       '@types/yargs@^15',
       '@types/fs-extra@^9',
       '@types/glob@^7',
+      '@types/promptly',
+      'promptly',
     ],
     bin: {
       'run-suite': 'bin/run-suite',
