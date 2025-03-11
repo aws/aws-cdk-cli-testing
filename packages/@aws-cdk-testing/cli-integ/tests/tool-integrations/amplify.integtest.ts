@@ -24,7 +24,17 @@ integTest('amplify integration', withToolContext(async (context) => {
   //
 
   // I tested to confirm that this will use the locally installed `create-amplify`
-  await shell.shell(['npm', 'create', '-y', 'amplify']);
+  await shell.shell(['npm', 'create', '-y', 'amplify'], {
+    modEnv: {
+      // In the `aws-cdk-lib` pipeline, `aws-cdk-lib` will have a prerelease version:
+      // `2.180.0-rc.0`. This doesn't satisfy the peerDependency that `aws-amplify` has
+      // on `aws-cdk-lib` which will be a version like `^2.168.0`, some stable version.
+      // The install fails because of that.
+      //
+      // This flag gets us back to behavior where NPM doesn't care very much about peerDeps.
+      NPM_CONFIG_LEGACY_PEER_DEPS: 'true',
+    },
+  });
   await shell.shell(['npx', 'ampx', 'configure', 'telemetry', 'disable']);
 
   await shell.shell(['npx', 'ampx', 'sandbox', '--once'], {
