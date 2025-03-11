@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { TestContext } from './integ-test';
+import { Process } from './process';
 import { TemporaryDirectoryContext } from './with-temporary-directory';
 
 /**
@@ -31,13 +32,11 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
   // copy because we will be shifting it
   const interact = [...(options.interact ?? [])];
 
-  const child = child_process.spawn(command[0], command.slice(1), {
+  const child = Process.spawn(command[0], command.slice(1), {
     ...options,
     env,
-    // Need this for Windows where we want .cmd and .bat to be found as well.
-    shell: true,
-    stdio: [interact.length > 0 ? 'pipe' : 'ignore', 'pipe', 'pipe'],
-  });
+    tty: interact.length > 0,
+  })
 
   return new Promise<string>((resolve, reject) => {
     const stdout = new Array<Buffer>();
@@ -45,54 +44,39 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
 
     const stdoutSinceLastPrompt = new Array<Buffer>();
 
-    child.stdout!.on('data', chunk => {
+    child.onStdout(chunk => {
       if (show === 'always') {
-        writeToOutputs(chunk);
+        writeToOutputs(chunk.toString('utf-8'));
       }
       stdout.push(chunk);
       stdoutSinceLastPrompt.push(chunk);
-      const toCheckAgainst = Buffer.concat(stdoutSinceLastPrompt).toString('utf-8');
-
-      if (child.stdin) {
-        console.log(`Stdout since last interaction: ${toCheckAgainst}`);
-      }
 
       const interaction = interact[0];
       if (interaction) {
 
-        if (child.stdin == null) {
-          throw new Error('User interaction configured but child process has no stdin');
-        }
-
         if (interaction.prompt.test(Buffer.concat(stdoutSinceLastPrompt).toString('utf-8'))) {
-          console.log(`Output (${toCheckAgainst}) matched with prompt (${interaction.prompt}). Writing ${interaction.input} to child stdin`);
           // subprocess expects a user input now
-          child.stdin.write(interaction.input + os.EOL);
+          child.writeStdin(interaction.input + os.EOL);
           interact.shift();
           stdoutSinceLastPrompt.splice(0);
-        }
-        if (interact.length === 0) {
-          console.log('No more interactions to perform. Ending child stdin pipe.')
-          // terminate stdin on the last interaction
-          child.stdin.end();
         }
 
       }
 
     });
 
-    child.stderr!.on('data', chunk => {
+    child.onStderr(chunk => {
       if (show === 'always') {
-        writeToOutputs(chunk);
+        writeToOutputs(chunk.toString('utf-8'));
       }
       if (options.captureStderr ?? true) {
         stderr.push(chunk);
       }
     });
 
-    child.once('error', reject);
+    // child.once('error', reject);
 
-    child.once('close', code => {
+    child.onExit(code => {
       const stderrOutput = Buffer.concat(stderr).toString('utf-8');
       const stdoutOutput = Buffer.concat(stdout).toString('utf-8');
       const out = (options.onlyStderr ? stderrOutput : stdoutOutput + stderrOutput).trim();
