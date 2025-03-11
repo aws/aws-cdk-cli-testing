@@ -54,7 +54,7 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
         writeToOutputs(chunk.toString('utf-8'));
       }
       stdout.push(chunk);
-      lastLine.add(chunk.toString('utf-8'));
+      lastLine.append(chunk.toString('utf-8'));
 
       const interaction = remainingInteractions[0];
       if (interaction) {
@@ -262,7 +262,7 @@ class LastLine {
 
   private lastLine: string = '';
 
-  public add(chunk: string): void {
+  public append(chunk: string): void {
     const lines = chunk.split(os.EOL);
     if (lines.length === 1) {
       // chunk doesn't contain a new line so just append
