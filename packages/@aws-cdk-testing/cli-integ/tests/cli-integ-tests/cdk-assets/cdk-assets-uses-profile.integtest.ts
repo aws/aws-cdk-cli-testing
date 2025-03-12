@@ -7,6 +7,15 @@ jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-c
 
 integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fixture) => {
 
+    const currentCreds = {
+      accessKey: process.env.AWS_ACCESS_KEY_ID,
+      secretKey: process.env.AWS_SECRET_ACCESS_KEY,
+      sessionToken: process.env.AWS_SESSION_TOKEN
+    }
+    if (!(currentCreds.accessKey && currentCreds.secretKey && currentCreds.sessionToken)) {
+      throw new Error('This test requires access to AWS credentials via environment variables.')
+    }
+
     await fixture.shell(['npm', 'init', '-y']);
     await fixture.shell(['npm', 'install', `cdk-assets@latest`]);
 
@@ -50,9 +59,9 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
 
     // this kind sucks but its what it is given we need to write a working profile
     await fs.writeFile(credentialsFile, `[${profile}]
-aws_access_key_id=${process.env.AWS_ACCESS_KEY_ID}
-aws_secret_access_key=${process.env.AWS_SECRET_ACCESS_KEY}
-aws_session_token=${process.env.AWS_SESSION_TOKEN}`);
+aws_access_key_id=${currentCreds.accessKey}
+aws_secret_access_key=${currentCreds.secretKey}
+aws_session_token=${currentCreds.sessionToken}`);
 
     await fs.writeFile(path.join(fixture.integTestDir, 'assets.json'), JSON.stringify(assetsJson, undefined, 2));
     await fixture.shell(['npx', 'cdk-assets', '--path', 'assets.json', 'publish', '--profile', profile], {
