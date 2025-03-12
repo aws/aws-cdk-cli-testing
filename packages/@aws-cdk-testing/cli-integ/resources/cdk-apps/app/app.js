@@ -851,7 +851,7 @@ class LookupDummyStack extends cdk.Stack {
     }).value;
 
     const dummy = response[0];
-    new cdk.CfnOutput(this, 'Output', {
+    new cdk.CfnOutput(this, 'Dummy', {
       value: dummy.Arn,
     });
   }

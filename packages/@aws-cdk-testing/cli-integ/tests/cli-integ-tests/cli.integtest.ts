@@ -2975,7 +2975,7 @@ integTest(
     expect(fixture.template('lookup-dummy')).toEqual(
       expect.objectContaining({
         Outputs: {
-          Arn: {
+          Dummy: {
             Value: 'arn:aws:iam::123456789012:role/DUMMY_ARN',
           },
         },
