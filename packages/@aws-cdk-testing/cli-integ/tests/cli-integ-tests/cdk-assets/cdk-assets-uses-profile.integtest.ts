@@ -50,7 +50,7 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
         },
         testfile2: {
           source: {
-            path: assetFile1,
+            path: assetFile2,
             packaging: 'file',
           },
           destinations: {
