@@ -201,6 +201,8 @@ const cliInteg = configureProject(
       'jest-junit@^15',
       'ts-jest@^29',
       'node-pty',
+      'promptly',
+      '@types/promptly'
     ],
     devDeps: [
       '@types/semver@^7',

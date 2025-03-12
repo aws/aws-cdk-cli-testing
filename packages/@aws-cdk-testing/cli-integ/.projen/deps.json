@@ -184,6 +184,10 @@
       "type": "runtime"
     },
     {
+      "name": "@types/promptly",
+      "type": "runtime"
+    },
+    {
       "name": "axios",
       "version": "^1",
       "type": "runtime"
@@ -235,6 +239,10 @@
     {
       "name": "p-queue",
       "version": "^6",
+      "type": "runtime"
+    },
+    {
+      "name": "promptly",
       "type": "runtime"
     },
     {
