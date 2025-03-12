@@ -81,7 +81,7 @@ aws_secret_access_key=${currentCreds.secretKey}
 aws_session_token=${currentCreds.sessionToken}`);
 
     await fs.writeFile(path.join(fixture.integTestDir, 'assets.json'), JSON.stringify(assetsJson, undefined, 2));
-    await fixture.shell(['/Users/epolon/dev/src/github.com/aws-cdk-cli/packages/cdk-assets/bin/cdk-assets', '--path', 'assets.json', 'publish', '--profile', profile], {
+    await fixture.shell(['npx', 'cdk-assets', '--path', 'assets.json', 'publish', '--profile', profile], {
       modEnv: {
         ...fixture.cdkShellEnv(),
         AWS_SHARED_CREDENTIALS_FILE: credentialsFile,
