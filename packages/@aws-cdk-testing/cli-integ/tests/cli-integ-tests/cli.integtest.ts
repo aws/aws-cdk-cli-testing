@@ -23,6 +23,7 @@ import { PutObjectLockConfigurationCommand } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, DeleteTopicCommand } from '@aws-sdk/client-sns';
 import { AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import {
+  CdkCliOptions,
   cloneDirectory,
   integTest,
   randomInteger,
@@ -61,7 +62,7 @@ describe('ci', () => {
     integTest(
       'output to stdout',
       withDefaultFixture(async (fixture) => {
-        const execOptions = {
+        const execOptions: CdkCliOptions = {
           captureStderr: true,
           onlyStderr: true,
           modEnv: {
@@ -70,6 +71,7 @@ describe('ci', () => {
             JSII_SILENCE_WARNING_UNTESTED_NODE_VERSION: 'true',
             JSII_SILENCE_WARNING_DEPRECATED_NODE_VERSION: 'true',
           },
+          options: ['--no-notices'],
         };
 
         const deployOutput = await fixture.cdkDeploy('test-2', execOptions);
