@@ -113,10 +113,33 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
  */
 export interface UserInteraction {
   /**
-   * The prompt to expect. Regex matched against the output of the process
-   * since its last prompt (or from process start).
+   * The prompt to expect. Regex matched against the last line in
+   * the output before the prompt is displayed.
    *
    * Most commonly this would be a simple string to match for inclusion.
+   *
+   * Examples:
+   *
+   * - Process Output: "Hey there! Are you sure?"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): Yes
+   *   Reason: "Hey there! Are you sure?" ~ /Are you sure?/
+   *
+   * - Process Output: "Hey there!\nAre you sure?"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): Yes
+   *   Reason: "Are you sure?" ~ /Are you sure?/
+   *
+   * - Process Output: "Are you sure?\n(remember this is destructive)"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): No
+   *   Reason: "(remember this is destructive)" ≄ /Are you sure?/
+   *
+   * - Process Output: "Are you sure?\n(remember this is destructive)"
+   *   Prompt: /remember this is destructive/
+   *   Match (Yes/No): Yes
+   *   Reason: "(remember this is destructive)" ~ /remember this is destructive/
+   *
    */
   readonly prompt: RegExp;
   /**
