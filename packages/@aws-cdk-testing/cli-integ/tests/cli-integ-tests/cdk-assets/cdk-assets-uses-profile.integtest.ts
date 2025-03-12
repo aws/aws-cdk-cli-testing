@@ -24,16 +24,18 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
     const bucketName = `cdk-hnb659fds-assets-${account}-${region}`;
 
     // Write an asset file and a data file for the Docker image
-    const assetFile = 'testfile.txt';
-    await fs.writeFile(path.join(fixture.integTestDir, assetFile), 'some asset file');
+    const assetFile1 = 'testfile.txt';
+    const assetFile2 = 'testfile.txt';
+    await fs.writeFile(path.join(fixture.integTestDir, assetFile1), 'some asset file');
+    await fs.writeFile(path.join(fixture.integTestDir, assetFile2), 'some asset file');
 
     // Write an asset JSON file to publish to the bootstrapped environment
     const assetsJson = {
       version: "38.0.1",
       files: {
-        testfile: {
+        testfile1: {
           source: {
-            path: assetFile,
+            path: assetFile1,
             packaging: 'file',
           },
           destinations: {
@@ -41,7 +43,21 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
               region,
               assumeRoleArn: `arn:\${AWS::Partition}:iam::${account}:role/cdk-hnb659fds-file-publishing-role-${account}-${region}`,
               bucketName,
-              objectKey: `test-file-${Date.now()}.json`,
+              objectKey: `test-file1-${Date.now()}.json`,
+            }
+          }
+        },
+        testfile2: {
+          source: {
+            path: assetFile1,
+            packaging: 'file',
+          },
+          destinations: {
+            current: {
+              region,
+              assumeRoleArn: `arn:\${AWS::Partition}:iam::${account}:role/cdk-hnb659fds-file-publishing-role-${account}-${region}`,
+              bucketName,
+              objectKey: `test-file2-${Date.now()}.json`,
             }
           }
         }
@@ -64,7 +80,7 @@ aws_secret_access_key=${currentCreds.secretKey}
 aws_session_token=${currentCreds.sessionToken}`);
 
     await fs.writeFile(path.join(fixture.integTestDir, 'assets.json'), JSON.stringify(assetsJson, undefined, 2));
-    await fixture.shell(['npx', 'cdk-assets', '--path', 'assets.json', 'publish', '--profile', profile], {
+    await fixture.shell(['/Users/epolon/dev/src/github.com/aws-cdk-cli/packages/cdk-assets/bin/cdk-assets', '--path', 'assets.json', 'publish', '--profile', profile], {
       modEnv: {
         ...fixture.cdkShellEnv(),
         AWS_SHARED_CREDENTIALS_FILE: credentialsFile,
