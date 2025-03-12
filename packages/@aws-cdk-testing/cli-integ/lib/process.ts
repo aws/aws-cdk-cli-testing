@@ -31,6 +31,15 @@ export interface IProcess {
    */
   writeStdin(data: string): void;
 
+  /**
+   * Singal that no more data will be written to stdin. In non tty process you must
+   * call this method to make sure the process exits.
+   *
+   * @param delay - optional delay in milliseconds before the signal is sent.
+   *
+   */
+  endStdin(delay?: number): void;
+
 };
 
 export class Process {
@@ -38,7 +47,7 @@ export class Process {
   /**
    * Spawn a process with a TTY attached.
    */
-  public static spawnTTY(command: string, args: string[], options: pty.IPtyForkOptions | pty.IWindowsPtyForkOptions) {
+  public static spawnTTY(command: string, args: string[], options: pty.IPtyForkOptions | pty.IWindowsPtyForkOptions = {}): IProcess {
 
     const process = pty.spawn(command, args, {
       name: 'xterm-color',
@@ -51,7 +60,7 @@ export class Process {
   /**
    * Spawn a process without a forcing a TTY.
    */
-  public static spawn(command: string, args: string[], options: child.SpawnOptionsWithoutStdio) {
+  public static spawn(command: string, args: string[], options: child.SpawnOptions = {}): IProcess {
 
     const process = child.spawn(command, args, {
       shell: true,
@@ -67,6 +76,10 @@ export class Process {
 class PtyProcess implements IProcess {
 
   public constructor(private readonly process: pty.IPty) {}
+
+  public endStdin(_?: number): void {
+    // not needed because all streams are the same in tty.
+  }
 
   public onError(_: (error: Error) => void): void {
     // not needed because the pty.spawn will simply fail in this case.
@@ -124,6 +137,17 @@ class NonPtyProcess implements IProcess {
       throw new Error('No stdin defined for process');
     }
     this.process.stdin.write(content);
+  }
+
+  public endStdin(delay?: number): void {
+    if (this.process.stdin == null) {
+      throw new Error('No stdin defined for process');
+    }
+    if (delay) {
+      setTimeout(() => this.process.stdin!.end(), delay);
+    } else {
+      this.process.stdin!.end();
+    }
   }
 
 };
