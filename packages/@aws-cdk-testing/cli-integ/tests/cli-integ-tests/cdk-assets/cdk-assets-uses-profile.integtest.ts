@@ -23,7 +23,8 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
     const region = fixture.aws.region;
     const bucketName = `cdk-hnb659fds-assets-${account}-${region}`;
 
-    // Write an asset file and a data file for the Docker image
+    // Write some asset files. Its important to have more than 1 because cdk-assets
+    // code has some funky state mutations that happens on each asset publishing.
     const assetFile1 = 'testfile.txt';
     const assetFile2 = 'testfile.txt';
     await fs.writeFile(path.join(fixture.integTestDir, assetFile1), 'some asset file');
