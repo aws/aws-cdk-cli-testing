@@ -21,7 +21,7 @@ async function main() {
     'cloneDirectory',
   ]
 
-  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/bootstrapping.integtest.ts'), 'utf-8');
+  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/garbage-collection.integtest.ts'), 'utf-8');
   const targetDir = path.join(__dirname, '..', 'tests/cli-integ-tests');
   const splitter = 'integTest(';
 
@@ -34,7 +34,7 @@ async function main() {
       // .replace(/`/g, '')
       .replace(/"/g, '')
       .replace(/'/g, '');
-    const targetFile = path.join(targetDir, `cdk-bootstrap-${name}.integtest.ts`);
+    const targetFile = path.join(targetDir, `cdk-gc-${name}.integtest.ts`);
 
     const libImports = new Set(['integTest'])
 
@@ -93,7 +93,10 @@ async function main() {
         'InvokeCommand'
       ],
       '@aws-sdk/client-s3': [
-        'PutObjectLockConfigurationCommand'
+        'PutObjectLockConfigurationCommand',
+        'GetObjectTaggingCommand',
+        'ListObjectsV2Command',
+        'PutObjectTaggingCommand'
       ],
       '@aws-sdk/client-sns': [
         'CreateTopicCommand',
@@ -104,7 +107,10 @@ async function main() {
         'GetCallerIdentityCommand'
       ],
       '@aws-sdk/client-ecr': [
-        'DescribeRepositoriesCommand'
+        'DescribeRepositoriesCommand',
+        'BatchGetImageCommand',
+        'ListImagesCommand',
+        'PutImageCommand'
       ],
     }
 
@@ -133,8 +139,12 @@ async function main() {
     imports.push(`import { ${Array.from(libImports).join(', ')} } from '../../lib';`);
 
     const setJestTimeout = 'jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime';
+    const consts = [
+      `const S3_ISOLATED_TAG = 'aws-cdk:isolated';`,
+      `const ECR_ISOLATED_TAG = 'aws-cdk.isolated';`
+    ]
 
-    fs.writeFileSync(targetFile, `${imports.join('\n')}\n\n${setJestTimeout}\n\n${splitter}${test}`);
+    fs.writeFileSync(targetFile, `${imports.join('\n')}\n\n${consts.join('\n')}\n\n${setJestTimeout}\n\n${splitter}${test}`);
     // console.log(`-------------- ${name} ----------`)
     // console.log(`${splitter}${test}`);
 
