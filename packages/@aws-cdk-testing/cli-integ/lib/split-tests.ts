@@ -21,7 +21,7 @@ async function main() {
     'cloneDirectory',
   ]
 
-  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/cli.integtest.ts'), 'utf-8');
+  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/bootstrapping.integtest.ts'), 'utf-8');
   const targetDir = path.join(__dirname, '..', 'tests/cli-integ-tests');
   const splitter = 'integTest(';
 
@@ -34,7 +34,7 @@ async function main() {
       // .replace(/`/g, '')
       .replace(/"/g, '')
       .replace(/'/g, '');
-    const targetFile = path.join(targetDir, `cdk-${name}.integtest.ts`);
+    const targetFile = path.join(targetDir, `cdk-bootstrap-${name}.integtest.ts`);
 
     const libImports = new Set(['integTest'])
 
@@ -85,6 +85,9 @@ async function main() {
         'DeleteRolePolicyCommand',
         'ListRolePoliciesCommand',
         'PutRolePolicyCommand',
+        'CreatePolicyCommand',
+        'DeletePolicyCommand',
+        'GetRoleCommand'
       ],
       '@aws-sdk/client-lambda': [
         'InvokeCommand'
@@ -99,6 +102,9 @@ async function main() {
       '@aws-sdk/client-sts': [
         'AssumeRoleCommand',
         'GetCallerIdentityCommand'
+      ],
+      '@aws-sdk/client-ecr': [
+        'DescribeRepositoriesCommand'
       ],
     }
 
@@ -119,6 +125,11 @@ async function main() {
     for (const i of sdkImportStatements) {
       imports.push(i);
     }
+
+    if (test.includes('yaml.')) {
+      imports.push(`import * as yaml from 'yaml';`);
+    }
+
     imports.push(`import { ${Array.from(libImports).join(', ')} } from '../../lib';`);
 
     const setJestTimeout = 'jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime';
