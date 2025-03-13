@@ -224,6 +224,10 @@
       "type": "runtime"
     },
     {
+      "name": "node-pty",
+      "type": "runtime"
+    },
+    {
       "name": "npm",
       "version": "^8",
       "type": "runtime"

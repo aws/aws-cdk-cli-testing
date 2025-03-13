@@ -65,7 +65,6 @@ async function runInIsolatedContainer(fixture: TestFixture, pathsToMount: string
       'public.ecr.aws/ubuntu/ubuntu:24.04_stable',
       `${scriptName}`,
     ], {
-      stdio: 'inherit',
       modEnv: {
         AWS_ACCESS_KEY_ID: credentials.accessKeyId,
         AWS_SECRET_ACCESS_KEY: credentials.secretAccessKey,

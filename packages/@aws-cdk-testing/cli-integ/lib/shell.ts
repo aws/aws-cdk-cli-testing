@@ -1,7 +1,9 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { TestContext } from './integ-test';
+import { Process } from './process';
 import { TemporaryDirectoryContext } from './with-temporary-directory';
 
 /**
@@ -26,51 +28,131 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
   const show = options.show ?? 'always';
 
   const env = options.env ?? (options.modEnv ? { ...process.env, ...options.modEnv } : process.env);
+  const tty = options.interact && options.interact.length > 0;
 
-  const child = child_process.spawn(command[0], command.slice(1), {
-    ...options,
-    env,
-    // Need this for Windows where we want .cmd and .bat to be found as well.
-    shell: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  // Coerce to `any` because `ShellOptions` contains custom properties
+  // that don't exist in the underlying interfaces. We could either rebuild each options map,
+  // or just pass through and let the underlying implemenation ignore what it doesn't know about.
+  // We choose the lazy one.
+  const spawnOptions = { ...options, env } as any;
+
+  const child = tty
+    ? Process.spawnTTY(command[0], command.slice(1), spawnOptions)
+    : Process.spawn(command[0], command.slice(1), spawnOptions)
+
+  // copy because we will be shifting it
+  const remainingInteractions = [...(options.interact ?? [])];
 
   return new Promise<string>((resolve, reject) => {
     const stdout = new Array<Buffer>();
     const stderr = new Array<Buffer>();
 
-    child.stdout!.on('data', chunk => {
+    const lastLine = new LastLine();
+
+    child.onStdout(chunk => {
       if (show === 'always') {
-        writeToOutputs(chunk);
+        writeToOutputs(chunk.toString('utf-8'));
       }
       stdout.push(chunk);
+      lastLine.append(chunk.toString('utf-8'));
+
+      const interaction = remainingInteractions[0];
+      if (interaction) {
+
+        if (interaction.prompt.test(lastLine.get())) {
+          // subprocess expects a user input now
+          child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
+          remainingInteractions.shift();
+        }
+
+      }
+
     });
 
-    child.stderr!.on('data', chunk => {
+    child.onStderr(chunk => {
       if (show === 'always') {
-        writeToOutputs(chunk);
+        writeToOutputs(chunk.toString('utf-8'));
       }
       if (options.captureStderr ?? true) {
         stderr.push(chunk);
       }
     });
 
-    child.once('error', reject);
+    child.onError(reject);
 
-    child.once('close', code => {
+    child.onExit(code => {
       const stderrOutput = Buffer.concat(stderr).toString('utf-8');
       const stdoutOutput = Buffer.concat(stdout).toString('utf-8');
       const out = (options.onlyStderr ? stderrOutput : stdoutOutput + stderrOutput).trim();
-      if (code === 0 || options.allowErrExit) {
-        resolve(out);
-      } else {
+
+      const logAndreject = (error: Error) => {
         if (show === 'error') {
           writeToOutputs(`${out}\n`);
         }
-        reject(new Error(`'${command.join(' ')}' exited with error code ${code}.`));
+        reject(error);
+      }
+
+      if (remainingInteractions.length !== 0) {
+        // regardless of the exit code, if we didn't consume all expected interactions we probably
+        // did somethiing wrong.
+        logAndreject(new Error(`Expected more user interactions but subprocess exited with ${code}`));
+        return;
+      }
+
+      if (code === 0 || options.allowErrExit) {
+        resolve(out);
+      } else {
+        logAndreject(new Error(`'${command.join(' ')}' exited with error code ${code}.`));
       }
     });
   });
+}
+
+/**
+ * Models a single user interaction with the shell.
+ */
+export interface UserInteraction {
+  /**
+   * The prompt to expect. Regex matched against the last line in
+   * the output before the prompt is displayed.
+   *
+   * Most commonly this would be a simple string to match for inclusion.
+   *
+   * Examples:
+   *
+   * - Process Output: "Hey there! Are you sure?"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): Yes
+   *   Reason: "Hey there! Are you sure?" ~ /Are you sure?/
+   *
+   * - Process Output: "Hey there!\nAre you sure?"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): Yes
+   *   Reason: "Are you sure?" ~ /Are you sure?/
+   *
+   * - Process Output: "Are you sure?\n(remember this is destructive)"
+   *   Prompt: /Are you sure?/
+   *   Match (Yes/No): No
+   *   Reason: "(remember this is destructive)" ≄ /Are you sure?/
+   *
+   * - Process Output: "Are you sure?\n(remember this is destructive)"
+   *   Prompt: /remember this is destructive/
+   *   Match (Yes/No): Yes
+   *   Reason: "(remember this is destructive)" ~ /remember this is destructive/
+   *
+   */
+  readonly prompt: RegExp;
+  /**
+   * The input to provide.
+   */
+  readonly input: string;
+
+  /**
+   * The string to signal the end of input.
+   *
+   * @default os.EOL
+   */
+  readonly end?: string;
 }
 
 export interface ShellOptions extends child_process.SpawnOptions {
@@ -112,6 +194,14 @@ export interface ShellOptions extends child_process.SpawnOptions {
    * @default always
    */
   readonly show?: 'always' | 'never' | 'error';
+
+  /**
+   * Provide user interaction to respond to shell prompts.
+   *
+   * Order and count should correspond to the expected prompts issued by the subprocess.
+   */
+  readonly interact?: UserInteraction[];
+
 }
 
 export class ShellHelper {
@@ -172,4 +262,41 @@ export function addToShellPath(x: string) {
   }
 
   process.env.PATH = parts.join(':');
+}
+
+/**
+ * Accumulate text since the last line break (or beginning of string) it has seen in the chunks.
+ *
+ * Examples:
+ *
+ * - Chunks: ['one\n', 'two\n', three']
+ * - Last Line: 'three'
+ *
+ * - Chunks: ['one', 'two', '\nthree']
+ * - Last Line: 'three'
+ *
+ * - Chunks: ['one', 'two']
+ * - Last Line: 'onetwo'
+ *
+ * - Chunks: ['one', 'two', '\nthree', 'four']
+ * - Last Line: 'threefour'
+ */
+class LastLine {
+
+  private lastLine: string = '';
+
+  public append(chunk: string): void {
+    const lines = chunk.split(os.EOL);
+    if (lines.length === 1) {
+      // chunk doesn't contain a new line so just append
+      this.lastLine += lines[0];
+    } else {
+      // chunk contains multiple lines so just override with the last one
+      this.lastLine = lines[lines.length - 1];
+    }
+  }
+
+  public get(): string {
+    return this.lastLine;
+  }
 }
