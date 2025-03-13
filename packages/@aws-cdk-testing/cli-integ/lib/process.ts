@@ -1,4 +1,5 @@
 import * as child from 'child_process';
+import { Readable, Writable } from 'stream';
 import * as pty from 'node-pty';
 
 /**
@@ -115,16 +116,12 @@ class NonPtyProcess implements IProcess {
   }
 
   public onStdout(callback: (chunk: Buffer) => void): void {
-    if (this.process.stdout == null) {
-      throw new Error('No stdout defined for process');
-    }
+    this.assertDefined('stdout', this.process.stdout);
     this.process.stdout.on('data', callback);
   }
 
   public onStderr(callback: (chunk: Buffer) => void): void {
-    if (this.process.stderr == null) {
-      throw new Error('No stderr defined for process');
-    }
+    this.assertDefined('stderr', this.process.stderr);
     this.process.stderr.on('data', callback);
   }
 
@@ -133,9 +130,7 @@ class NonPtyProcess implements IProcess {
   }
 
   public writeStdin(content: string): void {
-    if (this.process.stdin == null) {
-      throw new Error('No stdin defined for process');
-    }
+    this.assertDefined('stdin', this.process.stdin);
     this.process.stdin.write(content);
   }
 
@@ -147,6 +142,12 @@ class NonPtyProcess implements IProcess {
       setTimeout(() => this.process.stdin!.end(), delay);
     } else {
       this.process.stdin!.end();
+    }
+  }
+
+  public assertDefined(name: 'stdin' | 'stdout' | 'stderr', stream?: Readable | Writable | undefined | null): asserts stream {
+    if (stream == null) {
+      throw new Error(`No ${name} defined for child process`);
     }
   }
 
