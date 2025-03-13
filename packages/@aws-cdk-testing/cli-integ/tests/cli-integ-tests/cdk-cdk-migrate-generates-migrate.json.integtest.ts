@@ -2,6 +2,8 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import { integTest, withCDKMigrateFixture } from '../../lib';
 
+jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime
+
 integTest(
   'cdk migrate generates migrate.json',
   withCDKMigrateFixture('typescript', async (fixture) => {
@@ -14,4 +16,5 @@ integTest(
     await fixture.cdkDestroy(fixture.stackNamePrefix);
   }),
 );
+
 

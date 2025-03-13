@@ -121,7 +121,9 @@ async function main() {
     }
     imports.push(`import { ${Array.from(libImports).join(', ')} } from '../../lib';`);
 
-    fs.writeFileSync(targetFile, `${imports.join('\n')}\n\n${splitter}${test}`);
+    const setJestTimeout = 'jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime';
+
+    fs.writeFileSync(targetFile, `${imports.join('\n')}\n\n${setJestTimeout}\n\n${splitter}${test}`);
     // console.log(`-------------- ${name} ----------`)
     // console.log(`${splitter}${test}`);
 

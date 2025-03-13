@@ -2,6 +2,8 @@ import { CreateRoleCommand, DeleteRoleCommand, DeleteRolePolicyCommand, ListRole
 import { AssumeRoleCommand, GetCallerIdentityCommand } from '@aws-sdk/client-sts';
 import { integTest, retry, withDefaultFixture, sleep } from '../../lib';
 
+jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime
+
 integTest(
   'deploy with role',
   withDefaultFixture(async (fixture) => {

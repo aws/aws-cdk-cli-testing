@@ -1,5 +1,7 @@
 import { integTest, withDefaultFixture } from '../../lib';
 
+jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-case single-threaded runtime
+
 integTest(
   'cdk ls --show-dependencies --json',
   withDefaultFixture(async (fixture) => {
@@ -79,15 +81,3 @@ integTest(
   }),
 );
 
-/**
- * Type to store stack dependencies recursively
- */
-type DependencyDetails = {
-  id: string;
-  dependencies: DependencyDetails[];
-};
-
-type StackDetails = {
-  id: string;
-  dependencies: DependencyDetails[];
-};
