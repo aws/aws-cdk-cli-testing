@@ -27,11 +27,11 @@ integTest('cdk import prompts the user for sns topic arns', withDefaultFixture(a
     await fixture.cdk(['import', fullStackName], {
       interact: [
         {
-          prompt: /\(AWS::SNS::Topic\): enter/,
+          prompt: /\(empty to skip\)/,
           input: topic1Arn,
         },
         {
-          prompt: /\(AWS::SNS::Topic\): enter/,
+          prompt: /\(empty to skip\)/,
           input: topic2Arn,
         }
       ]
