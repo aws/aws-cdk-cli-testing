@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { integTest, RESOURCES_DIR, shell, withDefaultFixture, cloneDirectory } from '../../lib';
@@ -40,3 +41,17 @@ integTest(
   }),
 );
 
+async function listChildren(parent: string, pred: (x: string) => Promise<boolean>) {
+  const ret = new Array<string>();
+  for (const child of await fs.readdir(parent, { encoding: 'utf-8' })) {
+    const fullPath = path.join(parent, child.toString());
+    if (await pred(fullPath)) {
+      ret.push(fullPath);
+    }
+  }
+  return ret;
+}
+
+async function listChildDirs(parent: string) {
+  return listChildren(parent, async (fullPath: string) => (await fs.stat(fullPath)).isDirectory());
+}

@@ -34,17 +34,3 @@ integTest(
     }
   }),
 );
-
-/**
- * Type to store stack dependencies recursively
- */
-type DependencyDetails = {
-  id: string;
-  dependencies: DependencyDetails[];
-};
-
-type StackDetails = {
-  id: string;
-  dependencies: DependencyDetails[];
-};
-

@@ -57,19 +57,3 @@ integTest('hotswap ECS deployment respects properties override', withDefaultFixt
   expect(describeServicesResponse.services?.[0].deploymentConfiguration?.minimumHealthyPercent).toEqual(ecsMinimumHealthyPercent);
   expect(describeServicesResponse.services?.[0].deploymentConfiguration?.maximumPercent).toEqual(ecsMaximumHealthyPercent);
 }));
-
-async function listChildren(parent: string, pred: (x: string) => Promise<boolean>) {
-  const ret = new Array<string>();
-  for (const child of await fs.readdir(parent, { encoding: 'utf-8' })) {
-    const fullPath = path.join(parent, child.toString());
-    if (await pred(fullPath)) {
-      ret.push(fullPath);
-    }
-  }
-  return ret;
-}
-
-async function listChildDirs(parent: string) {
-  return listChildren(parent, async (fullPath: string) => (await fs.stat(fullPath)).isDirectory());
-}
-
