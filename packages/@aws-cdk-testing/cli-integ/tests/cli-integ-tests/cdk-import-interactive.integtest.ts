@@ -13,9 +13,9 @@ integTest('cdk import prompts the user for sns topic arns', withDefaultFixture(a
   const topic1Arn = await topicArn(topic1Name);
   const topic2Arn = await topicArn(topic2Name);
 
-  console.log(`Creating topic ${topic1Name}`);
+  fixture.log(`Creating topic ${topic1Name}`);
   await fixture.aws.sns.send(new CreateTopicCommand({ Name: topic1Name }))
-  console.log(`Creating topic ${topic2Name}`);
+  fixture.log(`Creating topic ${topic2Name}`);
   await fixture.aws.sns.send(new CreateTopicCommand({ Name: topic2Name }))
 
   try {
@@ -44,9 +44,9 @@ integTest('cdk import prompts the user for sns topic arns', withDefaultFixture(a
     expect(stackTopicArns).toEqual(new Set([topic1Arn, topic2Arn]))
 
   } finally {
-    console.log(`Deleting topic ${topic1Name}`);
+    fixture.log(`Deleting topic ${topic1Name}`);
     await fixture.aws.sns.send(new DeleteTopicCommand({ TopicArn: topic1Arn }))
-    console.log(`Deleting topic ${topic2Name}`);
+    fixture.log(`Deleting topic ${topic2Name}`);
     await fixture.aws.sns.send(new DeleteTopicCommand({ TopicArn: topic2Arn }))
   }
 
