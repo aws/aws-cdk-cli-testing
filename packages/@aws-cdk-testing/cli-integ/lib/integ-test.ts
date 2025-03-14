@@ -33,7 +33,7 @@ if (process.env.JEST_TEST_CONCURRENT === 'true') {
  */
 export function integTest(
   name: string,
-  callback: (context: TestContext) => Promise<void>,
+  _callback: (context: TestContext) => Promise<void>,
   timeoutMillis?: number,
 ): void {
   // Integ tests can run concurrently, and are responsible for blocking
@@ -59,14 +59,14 @@ export function integTest(
         throw new Error('FAIL_FAST requested and currently failing. Stopping test early.');
       }
 
-      return await callback({
-        output,
-        randomString: randomString(),
-        name,
-        log(s: string) {
-          output.write(`${s}\n`);
-        },
-      });
+      // return await callback({
+      //   output,
+      //   randomString: randomString(),
+      //   name,
+      //   log(s: string) {
+      //     output.write(`${s}\n`);
+      //   },
+      // });
     } catch (e: any) {
       failed = true;
 

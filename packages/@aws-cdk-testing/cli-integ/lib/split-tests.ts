@@ -15,13 +15,14 @@ async function main() {
     'withoutBootstrap',
     'withSamIntegrationFixture',
     'withSpecificFixture',
+    'withCliLibFixture',
     'randomInteger',
     'randomString',
     'sleep',
     'cloneDirectory',
   ]
 
-  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/garbage-collection.integtest.ts'), 'utf-8');
+  const uberfile = fs.readFileSync(path.join(__dirname, '..', 'tests/cli-integ-tests/cli-lib.integtest.ts'), 'utf-8');
   const targetDir = path.join(__dirname, '..', 'tests/cli-integ-tests');
   const splitter = 'integTest(';
 
@@ -34,7 +35,7 @@ async function main() {
       // .replace(/`/g, '')
       .replace(/"/g, '')
       .replace(/'/g, '');
-    const targetFile = path.join(targetDir, `cdk-gc-${name}.integtest.ts`);
+    const targetFile = path.join(targetDir, `cdk-lib-${name}.integtest.ts`);
 
     const libImports = new Set(['integTest'])
 
