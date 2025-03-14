@@ -33,7 +33,7 @@ if (process.env.JEST_TEST_CONCURRENT === 'true') {
  */
 export function integTest(
   name: string,
-  _callback: (context: TestContext) => Promise<void>,
+  callback: (context: TestContext) => Promise<void>,
   timeoutMillis?: number,
 ): void {
   // Integ tests can run concurrently, and are responsible for blocking
@@ -42,7 +42,7 @@ export function integTest(
   // default: test filtering simply does not work with `test.concurrent`.
   // Instead, we make it opt-in only for the pipeline where we don't do any
   // selection, but execute all tests unconditionally.
-  const testKind = process.env.JEST_TEST_CONCURRENT === 'true' ? test.concurrent : test;
+  const testKind = test;
   const runner = shouldSkip(name) ? testKind.skip : testKind;
 
   runner(name, async () => {
@@ -59,14 +59,14 @@ export function integTest(
         throw new Error('FAIL_FAST requested and currently failing. Stopping test early.');
       }
 
-      // return await callback({
-      //   output,
-      //   randomString: randomString(),
-      //   name,
-      //   log(s: string) {
-      //     output.write(`${s}\n`);
-      //   },
-      // });
+      return await callback({
+        output,
+        randomString: randomString(),
+        name,
+        log(s: string) {
+          output.write(`${s}\n`);
+        },
+      });
     } catch (e: any) {
       failed = true;
 
