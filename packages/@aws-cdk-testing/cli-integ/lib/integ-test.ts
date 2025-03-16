@@ -7,7 +7,7 @@ const SKIP_TESTS = fs.readFileSync(path.join(__dirname, '..', 'skip-tests.txt'),
   .map(x => x.trim())
   .filter(x => x && !x.startsWith('#'));
 
-if (SKIP_TESTS) {
+if (SKIP_TESTS.length > 0) {
   process.stderr.write(`ℹ️ Skipping tests: ${JSON.stringify(SKIP_TESTS)}\n`);
 }
 
@@ -22,10 +22,6 @@ export interface TestContext {
   readonly name: string;
   readonly output: NodeJS.WritableStream;
   log(s: string): void;
-}
-
-if (process.env.JEST_TEST_CONCURRENT === 'true') {
-  process.stderr.write('ℹ️ JEST_TEST_CONCURRENT is true: tests will run concurrently and filters have no effect!\n0');
 }
 
 /**
