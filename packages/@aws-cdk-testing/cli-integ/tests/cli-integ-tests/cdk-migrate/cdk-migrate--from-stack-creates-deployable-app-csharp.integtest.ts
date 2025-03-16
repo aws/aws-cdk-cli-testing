@@ -1,7 +1,7 @@
 import { fromStackCreatesDeployableApp } from "./testcase";
 import { integTest, withExtendedTimeoutFixture } from "../../../lib";
 
-const language = 'typescript';
+const language = 'csharp';
 
 integTest(
   `cdk migrate --from-stack creates deployable ${language} app`,
