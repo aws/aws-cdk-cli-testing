@@ -242,7 +242,4 @@ new CdkCliIntegTestsWorkflow(repo, {
   localPackages: [cliInteg.name],
 });
 
-// temporary while debugging why the "cdk import prompts the user for sns topic arns" 
-// fails on github.
-repo.tryFindObjectFile('.github/workflows/integ.yml')!.addOverride('jobs.integ_matrix.steps.11.run', 'bin/run-suite -t "cdk import prompts the user for sns topic arns" --use-cli-release=${{ steps.versions.outputs.cli_version }} --framework-version=${{ steps.versions.outputs.lib_version }} ${{ matrix.suite }}')
 repo.synth();
