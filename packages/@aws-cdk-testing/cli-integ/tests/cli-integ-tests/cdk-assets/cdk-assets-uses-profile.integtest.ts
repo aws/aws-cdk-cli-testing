@@ -58,12 +58,12 @@ integTest(`cdk-assets uses profile when specified`, withDefaultFixture(async (fi
       }
     };
 
-    // create a profile with out current credentials.
+    // create a profile with our current credentials.
     //
-    // >>>>  if you're wondering why can't we do the reverse (i.e writea a bogus profile and assert a failure),
-    //       its because when cdk-assets discovers the current account, it DOES consider the profile.
-    //       writing a bogus profile would fail this operation and we won't be able to reach the code
-    //       we're trying to test.
+    // if you're wondering why can't we do the reverse (i.e write a bogus profile and assert a failure),
+    // its because when cdk-assets discovers the current account, it DOES consider the profile.
+    // writing a bogus profile would fail this operation and we won't be able to reach the code
+    // we're trying to test.
     const credentialsFile = path.join(fixture.integTestDir, 'aws.credentials');
     const profile = 'cdk-assets';
 
