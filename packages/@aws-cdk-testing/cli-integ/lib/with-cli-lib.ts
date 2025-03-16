@@ -134,6 +134,7 @@ export class CliLibIntegrationTestFixture extends TestFixture {
 __EOS__`], {
       ...options,
       modEnv: {
+        ...this.cdkShellEnv(),
         AWS_REGION: this.aws.region,
         AWS_DEFAULT_REGION: this.aws.region,
         STACK_NAME_PREFIX: this.stackNamePrefix,
