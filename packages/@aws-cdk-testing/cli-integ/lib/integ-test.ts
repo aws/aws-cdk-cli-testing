@@ -7,7 +7,7 @@ const SKIP_TESTS = fs.readFileSync(path.join(__dirname, '..', 'skip-tests.txt'),
   .map(x => x.trim())
   .filter(x => x && !x.startsWith('#'));
 
-if (SKIP_TESTS) {
+if (SKIP_TESTS.length > 0) {
   process.stderr.write(`ℹ️ Skipping tests: ${JSON.stringify(SKIP_TESTS)}\n`);
 }
 
@@ -24,10 +24,6 @@ export interface TestContext {
   log(s: string): void;
 }
 
-if (process.env.JEST_TEST_CONCURRENT === 'true') {
-  process.stderr.write('ℹ️ JEST_TEST_CONCURRENT is true: tests will run concurrently and filters have no effect!\n0');
-}
-
 /**
  * A wrapper for jest's 'test' which takes regression-disabled tests into account and prints a banner
  */
@@ -36,14 +32,7 @@ export function integTest(
   callback: (context: TestContext) => Promise<void>,
   timeoutMillis?: number,
 ): void {
-  // Integ tests can run concurrently, and are responsible for blocking
-  // themselves if they cannot.  Because `test.concurrent` executes the test
-  // code immediately, regardles of any `--testNamePattern`, this cannot be the
-  // default: test filtering simply does not work with `test.concurrent`.
-  // Instead, we make it opt-in only for the pipeline where we don't do any
-  // selection, but execute all tests unconditionally.
-  const testKind = process.env.JEST_TEST_CONCURRENT === 'true' ? test.concurrent : test;
-  const runner = shouldSkip(name) ? testKind.skip : testKind;
+  const runner = shouldSkip(name) ? test.skip : test;
 
   runner(name, async () => {
     const output = new MemoryStream();

@@ -19,10 +19,9 @@ module.exports = {
   // for the lock. Which is almost never what we actually care about. Set it high.
   testTimeout: 600000,
 
-  // Affects test.concurrent(), these are self-limiting anyway
-  maxConcurrency: 10,
+  maxWorkers: 10,
   reporters: [
     "default",
-    [ "jest-junit", { suiteName: "jest tests", outputDirectory: "coverage" } ]
+    ["jest-junit", { suiteName: "jest tests", outputDirectory: "coverage" }]
   ]
 };
