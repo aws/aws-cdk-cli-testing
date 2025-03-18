@@ -18,7 +18,7 @@ integTest(
     };
 
     const deployOutput = await fixture.cdkDeploy('test-2', execOptions);
-    const diffOutput = await fixture.cdk(['diff', fixture.fullStackName('test-2')], execOptions);
+    const diffOutput = await fixture.cdk(['diff', '--no-notices', fixture.fullStackName('test-2')], execOptions);
     const destroyOutput = await fixture.cdkDestroy('test-2', execOptions);
     expect(deployOutput).toEqual('');
     expect(destroyOutput).toEqual('');
