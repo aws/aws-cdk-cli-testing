@@ -65,6 +65,11 @@ async function main() {
       type: 'boolean',
       requiresArg: false,
     })
+    .options('shard', {
+      description: 'The test suite shard to execute in a format of (?<shardIndex>\\d+)/(?<shardCount>\\d+).',
+      type: 'string',
+      requiresArg: true,
+    })
     .help()
     .showHelpOnFail(false)
     .argv;
@@ -128,6 +133,7 @@ async function main() {
       ...args.verbose ? ['--verbose'] : [],
       ...passWithNoTests ? ['--passWithNoTests'] : [],
       ...args['test-file'] ? [args['test-file']] : [],
+      ...args.shard ? [`--shard=${args.shard}`] : [],
     ], path.resolve(__dirname, '..', '..', 'resources', 'integ.jest.config.js'));
   } finally {
     await packageSource.cleanup();

@@ -4,9 +4,6 @@
       "name": "build",
       "steps": [
         {
-          "spawn": "default"
-        },
-        {
           "exec": "yarn workspaces run build"
         }
       ]
@@ -57,7 +54,7 @@
       "description": "Synthesize project files",
       "steps": [
         {
-          "exec": "ts-node --project tsconfig.dev.json .projenrc.ts"
+          "exec": "echo 1"
         }
       ]
     },
