@@ -79,9 +79,6 @@ export function regionPool(): ResourcePool {
     ? process.env.AWS_REGIONS.split(',')
     : [process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? 'us-east-1'];
 
-  // eslint-disable-next-line no-console
-  console.log(`Using regions: ${REGIONS}\n`);
-
   _regionPool = ResourcePool.withResources('aws_regions', REGIONS);
   return _regionPool;
 }
