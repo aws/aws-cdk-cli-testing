@@ -101,6 +101,7 @@ async function main() {
 
   console.log(`Package source: ${packageSource.description}`);
   console.log(`Test suite:     ${suiteName}`);
+  console.log(`Test version:   ${thisPackageVersion()}`);
 
   await packageSource.prepare();
   serializeForSubprocess(packageSource);
@@ -131,6 +132,11 @@ async function main() {
   } finally {
     await packageSource.cleanup();
   }
+}
+
+function thisPackageVersion(): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('../../package.json').version;
 }
 
 main().catch(e => {
