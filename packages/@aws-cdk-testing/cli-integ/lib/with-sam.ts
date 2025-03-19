@@ -138,6 +138,9 @@ export class SamIntegrationTestFixture extends TestFixture {
     args.push('--port');
     args.push(port.toString());
 
+    // https://github.com/aws/aws-sam-cli/pull/7892
+    args.push('--no-memory-limit')
+
     // "Press Ctrl+C to quit" looks to be printed by a Flask server built into SAM CLI.
     return this.samShell(['sam', 'local', 'start-api', ...args], 'Press CTRL+C to quit', ()=>{
       return new Promise<ActionOutput>((resolve, reject) => {
