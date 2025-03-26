@@ -56,7 +56,11 @@ async function mutateAmplifyDepOnCdk(context: TemporaryDirectoryContext, cliVers
   assertIsObject(amplifyDepJson);
   assertIsStringArray(amplifyDepJson.defaultDevPackages);
 
-  replacePackageVersionIn('aws-cdk', cliVersion, amplifyDepJson.defaultDevPackages);
+  // Amplify is removing the dependency on aws-cdk, since Amplify is now using the toolkit-lib
+  // To prepare for this change, we need allow both situations: aws-cdk being listed and not being listed
+  // Fix is to simply allow the replace operation to also NOT replace the version
+  // @see https://github.com/aws-amplify/amplify-backend/pull/2614
+  replacePackageVersionIn('aws-cdk', cliVersion, amplifyDepJson.defaultDevPackages, false);
   replacePackageVersionIn('aws-cdk-lib', libVersion, amplifyDepJson.defaultDevPackages);
 
   await fs.writeFile(amplifyDepFile, JSON.stringify(amplifyDepJson, undefined, 2), { encoding: 'utf-8' });
@@ -80,9 +84,9 @@ async function mutateAmplifyDepOnCdk(context: TemporaryDirectoryContext, cliVers
  * ["package@version", "package@version", ...]
  * ```
  *
- * It's a failure if we don't find an entry to update.
+ * It's a failure if we don't find an entry to update, unless we explicitly pass an option to say that's okay.
  */
-function replacePackageVersionIn(packName: string, version: string, xs: string[]) {
+function replacePackageVersionIn(packName: string, version: string, xs: string[], failIfMissing = true) {
   let didUpdate = false;
   for (let i = 0; i < xs.length; i++) {
     if (xs[i].startsWith(`${packName}@`)) {
@@ -91,7 +95,7 @@ function replacePackageVersionIn(packName: string, version: string, xs: string[]
     }
   }
 
-  if (!didUpdate) {
+  if (failIfMissing && !didUpdate) {
     throw new Error(`Did not find a package version to update for ${packName} in ${JSON.stringify(xs)}`);
   }
 }
