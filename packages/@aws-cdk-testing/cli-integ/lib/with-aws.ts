@@ -5,12 +5,12 @@ import { ResourcePool } from './resource-pool';
 import { DisableBootstrapContext } from './with-cdk-app';
 
 export function atmosphereEnabled(): boolean {
-  const enabled = process.env.CDK_INTEG_ATMOSPHERE_ENABLED;
+  const enabled = process.env.CDK_INTEG_ATMOSPHERE_ENABLED ?? 'true';
   return enabled === 'true' || enabled === '1';
 }
 
 export function atmosphereEndpoint(): string {
-  const value = process.env.CDK_INTEG_ATMOSPHERE_ENDPOINT;
+  const value = process.env.CDK_INTEG_ATMOSPHERE_ENDPOINT ?? 'https://us-east-1.gamma.cdk-atmosphere.dev-tools.aws.dev';
   if (!value) {
     throw new Error('CDK_INTEG_ATMOSPHERE_ENDPOINT is not defined');
   }
@@ -18,7 +18,7 @@ export function atmosphereEndpoint(): string {
 }
 
 export function atmospherePool() {
-  const value = process.env.CDK_INTEG_ATMOSPHERE_POOL;
+  const value = process.env.CDK_INTEG_ATMOSPHERE_POOL ?? 'pr';
   if (!value) {
     throw new Error('CDK_INTEG_ATMOSPHERE_POOL is not defined');
   }
