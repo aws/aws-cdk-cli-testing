@@ -28,9 +28,16 @@ integTest('amplify integration', withToolContext(async (context) => {
   await shell.shell(['npm', 'create', '-y', 'amplify']);
   await shell.shell(['npx', 'ampx', 'configure', 'telemetry', 'disable']);
 
+  const awsCreds: Record<string, string> = context.aws.identity ? {
+    AWS_ACCESS_KEY_ID: context.aws.identity.accessKeyId,
+    AWS_SECRET_ACCESS_KEY: context.aws.identity.secretAccessKey,
+    AWS_SESSION_TOKEN: context.aws.identity.sessionToken!,
+  } : {};
+
   await shell.shell(['npx', 'ampx', 'sandbox', '--once'], {
     modEnv: {
       AWS_REGION: context.aws.region,
+      ...awsCreds
     },
   });
   try {
@@ -42,6 +49,7 @@ integTest('amplify integration', withToolContext(async (context) => {
     await shell.shell(['npx', 'ampx', 'sandbox', 'delete', '--yes'], {
       modEnv: {
         AWS_REGION: context.aws.region,
+        ...awsCreds
       },
     });
   }
