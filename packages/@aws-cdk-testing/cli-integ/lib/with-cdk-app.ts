@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DescribeStacksCommand, Stack } from '@aws-sdk/client-cloudformation';
-import { S3, waitUntilBucketNotExists } from '@aws-sdk/client-s3';
+// import { waitUntilBucketNotExists } from '@aws-sdk/client-s3';
 import { outputFromStack, AwsClients } from './aws';
 import { TestContext } from './integ-test';
 import { findYarnPackages } from './package-sources/repo-source';
@@ -695,16 +695,13 @@ export async function ensureBootstrapped(fixture: TestFixture) {
   const envSpecifier = `aws://${account}/${fixture.aws.region}`;
   if (ALREADY_BOOTSTRAPPED_IN_THIS_RUN.has(envSpecifier)) { return; }
 
-  if (atmosphereEnabled() && fixture.aws.identity) {
-    const s3 = new S3({ credentials: {
-      accessKeyId: fixture.aws.identity.accessKeyId,
-      secretAccessKey: fixture.aws.identity.secretAccessKey,
-      sessionToken: fixture.aws.identity.sessionToken
-    }, region: fixture.aws.region });
-    const bucketName = `cdk-hnb659fds-assets-${account}-${fixture.aws.region}`;
-    fixture.log(`Waiting for bucket to not exist: ${bucketName}`)
-    await waitUntilBucketNotExists({ client: s3, maxWaitTime: 120 }, { Bucket: bucketName})
-  }
+  // // environments may be recylced too quickly and it may take some time before the default bucket
+  // // name is available for reuse
+  // if (atmosphereEnabled()) {
+  //   const bucketName = `cdk-hnb659fds-assets-${account}-${fixture.aws.region}`;
+  //   fixture.log(`Waiting for bucket to not exist: ${bucketName}`);
+  //   await waitUntilBucketNotExists({ client: fixture.aws.s3, maxWaitTime: 120 }, { Bucket: bucketName});
+  // }
 
   await fixture.cdk(['bootstrap', envSpecifier], {
     modEnv: {

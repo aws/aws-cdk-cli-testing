@@ -18,7 +18,7 @@ export function atmosphereEndpoint(): string {
 }
 
 export function atmospherePool() {
-  const value = process.env.CDK_INTEG_ATMOSPHERE_POOL ?? 'pr';
+  const value = process.env.CDK_INTEG_ATMOSPHERE_POOL ?? 'github:aws/aws-cdk-cli-testing.pr';
   if (!value) {
     throw new Error('CDK_INTEG_ATMOSPHERE_POOL is not defined');
   }
