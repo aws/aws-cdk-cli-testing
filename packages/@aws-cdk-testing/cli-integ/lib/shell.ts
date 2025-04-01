@@ -60,9 +60,13 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       if (interaction) {
 
         if (interaction.prompt.test(lastLine.get())) {
-          // subprocess expects a user input now
-          child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
-          remainingInteractions.shift();
+          // subprocess expects a user input now.
+          // we have to write the input AFTER the child has started
+          // reading, so we do this with a small delay.
+          setTimeout(() => {
+            child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
+            remainingInteractions.shift();
+          }, 1000);
         }
 
       }
