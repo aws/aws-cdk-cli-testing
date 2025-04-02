@@ -4,8 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DescribeStacksCommand, Stack } from '@aws-sdk/client-cloudformation';
-// import { waitUntilBucketNotExists } from '@aws-sdk/client-s3';
-import { outputFromStack, AwsClients } from './aws';
+import { outputFromStack, AwsClients, sleep } from './aws';
 import { TestContext } from './integ-test';
 import { findYarnPackages } from './package-sources/repo-source';
 import { IPackageSource } from './package-sources/source';
@@ -695,25 +694,54 @@ export async function ensureBootstrapped(fixture: TestFixture) {
   const envSpecifier = `aws://${account}/${fixture.aws.region}`;
   if (ALREADY_BOOTSTRAPPED_IN_THIS_RUN.has(envSpecifier)) { return; }
 
-  // // environments may be recylced too quickly and it may take some time before the default bucket
-  // // name is available for reuse
-  // if (atmosphereEnabled()) {
-  //   const bucketName = `cdk-hnb659fds-assets-${account}-${fixture.aws.region}`;
-  //   fixture.log(`Waiting for bucket to not exist: ${bucketName}`);
-  //   await waitUntilBucketNotExists({ client: fixture.aws.s3, maxWaitTime: 120 }, { Bucket: bucketName});
-  // }
-
-  await fixture.cdk(['bootstrap', envSpecifier], {
-    modEnv: {
-      // Even for v1, use new bootstrap
-      CDK_NEW_BOOTSTRAP: '1',
-    },
-  });
+  if (atmosphereEnabled()) {
+    await bootstrapWithRetry(envSpecifier, fixture);
+  } else {
+    await doBootstrap(envSpecifier, fixture, false);
+  }
 
   // when using the atmosphere service, every test needs to bootstrap
   // its own environment.
   if (!atmosphereEnabled()) {
     ALREADY_BOOTSTRAPPED_IN_THIS_RUN.add(envSpecifier);
+  }
+}
+
+async function doBootstrap(envSpecifier: string, fixture: TestFixture, allowErrExit: boolean) {
+  return fixture.cdk(['bootstrap', envSpecifier], {
+    modEnv: {
+      // Even for v1, use new bootstrap
+      CDK_NEW_BOOTSTRAP: '1',
+      // when allowing error exit, we probably want to inspect
+      // and compare output, which is better done without color characters.
+      ...(allowErrExit ? { FORCE_COLOR: '0' } : {}),
+    },
+    allowErrExit,
+  });
+}
+
+async function bootstrapWithRetry(envSpecifier: string, fixture: TestFixture) {
+
+  const account = await fixture.aws.account();
+  const retryAfterSeconds = 30;
+  const bootstrapBucket = `cdk-hnb659fds-assets-${account}-${fixture.aws.region}`;
+
+  // try bootstrapping for 10 minutes.
+  const timeoutDate = new Date(Date.now() + 10 * 60 * 1000)
+  while (true) {
+    const out = await doBootstrap(envSpecifier, fixture, true);
+    if (out.includes(`Environment ${envSpecifier} bootstrapped`)) {
+      break;
+    }
+    if (out.includes(`${bootstrapBucket} already exists`)) {
+      // might be an s3 eventualy consistency issue due to recycled environments.
+      if (Date.now() < timeoutDate.getTime()) {
+        fixture.log(`Bootstrap of ${envSpecifier} failed due to bucket existence check. Retrying in ${retryAfterSeconds} seconds...`);
+        await sleep(retryAfterSeconds * 1000)
+        continue;
+      }
+    }
+    throw new Error(`Failed bootstrapping ${envSpecifier}`);
   }
 }
 

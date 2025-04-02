@@ -66,7 +66,7 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
           setTimeout(() => {
             child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
             remainingInteractions.shift();
-          }, 1000);
+          }, 500);
         }
 
       }
