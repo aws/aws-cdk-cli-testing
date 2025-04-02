@@ -222,6 +222,12 @@ export class ShellHelper {
       outputs: [this._output],
       cwd: this._cwd,
       ...options,
+      modEnv: {
+        // give every shell its own docker config directory
+        // so that parallel runs don't interfere with each other.
+        DOCKER_CONFIG: path.join(this._cwd, '.docker'),
+        ...options.modEnv,
+      },
     });
   }
 }
