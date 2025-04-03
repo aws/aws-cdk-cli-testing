@@ -19,7 +19,7 @@ module.exports = {
   // for the lock. Which is almost never what we actually care about. Set it high.
   testTimeout: 600000,
 
-  maxWorkers: 10,
+  maxWorkers: 50,
   reporters: [
     "default",
     ["jest-junit", { suiteName: "jest tests", outputDirectory: "coverage" }]
