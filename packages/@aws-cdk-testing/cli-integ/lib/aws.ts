@@ -81,6 +81,20 @@ export class AwsClients {
   }
 
   /**
+   * If the clients already has an established identity (via atmosphere for example),
+   * return an environment variable map activating it.
+   *
+   * Otherwise, returns undefined.
+   */
+  public identityEnv(): Record<string, string> | undefined {
+    return this.identity ? {
+      AWS_ACCESS_KEY_ID: this.identity.accessKeyId,
+      AWS_SECRET_ACCESS_KEY: this.identity.secretAccessKey,
+      AWS_SESSION_TOKEN: this.identity.sessionToken!,
+    } : undefined;
+  }
+
+  /**
    * Resolve the current identity or identity provider to credentials
    */
   public async credentials() {
