@@ -24,7 +24,7 @@
     "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
-    "cdklabs-projen-project-types": "^0.2.4",
+    "cdklabs-projen-project-types": "^0.2.13",
     "constructs": "^10.0.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^28.11.0",

@@ -240,6 +240,11 @@ new CdkCliIntegTestsWorkflow(repo, {
   testEnvironment: TEST_ENVIRONMENT,
   testRunsOn: TEST_RUNNER,
   localPackages: [cliInteg.name],
+  enableAtmosphere: {
+    oidcRoleArn: '${{ vars.CDK_ATMOSPHERE_PROD_OIDC_ROLE }}',
+    endpoint: '${{ vars.CDK_ATMOSPHERE_PROD_ENDPOINT }}',
+    pool: '${{ vars.CDK_INTEG_ATMOSPHERE_POOL }}'
+  }
 });
 
 repo.synth();
