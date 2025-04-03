@@ -28,9 +28,12 @@ integTest('amplify integration', withToolContext(async (context) => {
   await shell.shell(['npm', 'create', '-y', 'amplify']);
   await shell.shell(['npx', 'ampx', 'configure', 'telemetry', 'disable']);
 
+  const awsCreds = context.aws.identityEnv();
+
   await shell.shell(['npx', 'ampx', 'sandbox', '--once'], {
     modEnv: {
       AWS_REGION: context.aws.region,
+      ...awsCreds
     },
   });
   try {
@@ -42,6 +45,7 @@ integTest('amplify integration', withToolContext(async (context) => {
     await shell.shell(['npx', 'ampx', 'sandbox', 'delete', '--yes'], {
       modEnv: {
         AWS_REGION: context.aws.region,
+        ...awsCreds
       },
     });
   }

@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DescribeStacksCommand, Stack } from '@aws-sdk/client-cloudformation';
-import { outputFromStack, AwsClients } from './aws';
+import { outputFromStack, AwsClients, sleep } from './aws';
 import { TestContext } from './integ-test';
 import { findYarnPackages } from './package-sources/repo-source';
 import { IPackageSource } from './package-sources/source';
@@ -525,11 +525,7 @@ export class TestFixture extends ShellHelper {
   public cdkShellEnv() {
     // if tests are using an explicit aws identity already (i.e creds)
     // force every cdk command to use the same identity.
-    const awsCreds: Record<string, string> = this.aws.identity ? {
-      AWS_ACCESS_KEY_ID: this.aws.identity.accessKeyId,
-      AWS_SECRET_ACCESS_KEY: this.aws.identity.secretAccessKey,
-      AWS_SESSION_TOKEN: this.aws.identity.sessionToken!,
-    } : {};
+    const awsCreds = this.aws.identityEnv() ?? {};
 
     return {
       AWS_REGION: this.aws.region,
@@ -693,17 +689,61 @@ export async function ensureBootstrapped(fixture: TestFixture) {
   const envSpecifier = `aws://${await fixture.aws.account()}/${fixture.aws.region}`;
   if (ALREADY_BOOTSTRAPPED_IN_THIS_RUN.has(envSpecifier)) { return; }
 
-  await fixture.cdk(['bootstrap', envSpecifier], {
-    modEnv: {
-      // Even for v1, use new bootstrap
-      CDK_NEW_BOOTSTRAP: '1',
-    },
-  });
+  if (atmosphereEnabled()) {
+    // when atmosphere is enabled, each test starts with an empty environment
+    // and needs to deploy the bootstrap stack. in case environments are recylced too quickly,
+    // cloudformation may think the bootstrap bucket still exists even though it doesnt (because of s3 eventual consistency).
+    // so we retry on the specific error for a while.
+    await bootstrapWithRetryOnBucketExists(envSpecifier, fixture);
+  } else {
+    await doBootstrap(envSpecifier, fixture, false);
+  }
 
   // when using the atmosphere service, every test needs to bootstrap
   // its own environment.
   if (!atmosphereEnabled()) {
     ALREADY_BOOTSTRAPPED_IN_THIS_RUN.add(envSpecifier);
+  }
+}
+
+async function doBootstrap(envSpecifier: string, fixture: TestFixture, allowErrExit: boolean) {
+  return fixture.cdk(['bootstrap', envSpecifier], {
+    modEnv: {
+      // Even for v1, use new bootstrap
+      CDK_NEW_BOOTSTRAP: '1',
+      // when allowing error exit, we probably want to inspect
+      // and compare output, which is better done without color characters.
+      ...(allowErrExit ? { FORCE_COLOR: '0' } : {}),
+    },
+    allowErrExit,
+  });
+}
+
+async function bootstrapWithRetryOnBucketExists(envSpecifier: string, fixture: TestFixture) {
+
+  const account = await fixture.aws.account();
+  const retryAfterSeconds = 30;
+  const bootstrapBucket = `cdk-hnb659fds-assets-${account}-${fixture.aws.region}`;
+
+  // s3 says that a bucket deletion can take up to an hour to be fully visible.
+  // empirically we see that a few minutes is enough though. lets give 10 to be on the safe(r) side.
+  const timeoutMinutes = 10;
+
+  const timeoutDate = new Date(Date.now() + timeoutMinutes * 60 * 1000)
+  while (true) {
+    const out = await doBootstrap(envSpecifier, fixture, true);
+    if (out.includes(`Environment ${envSpecifier} bootstrapped`)) {
+      break;
+    }
+    if (out.includes(`${bootstrapBucket} already exists`)) {
+      // might be an s3 eventualy consistency issue due to recycled environments.
+      if (Date.now() < timeoutDate.getTime()) {
+        fixture.log(`Bootstrap of ${envSpecifier} failed due to bucket existence check. Retrying in ${retryAfterSeconds} seconds...`);
+        await sleep(retryAfterSeconds * 1000)
+        continue;
+      }
+    }
+    throw new Error(`Failed bootstrapping ${envSpecifier}`);
   }
 }
 
