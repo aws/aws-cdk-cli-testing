@@ -39,7 +39,7 @@ export function withAws<A extends TestContext>(
   return async (context: A) => {
     if (atmosphereEnabled()) {
       const atmosphere = new AtmosphereClient(atmosphereEndpoint());
-      const allocation = await atmosphere.acquire({ pool: atmospherePool(), requester: context.name });
+      const allocation = await atmosphere.acquire({ pool: atmospherePool(), requester: context.name, timeoutSeconds: 60 * 30 });
       const aws = await AwsClients.forIdentity(allocation.environment.region, {
         accessKeyId: allocation.credentials.accessKeyId,
         secretAccessKey: allocation.credentials.secretAccessKey,
