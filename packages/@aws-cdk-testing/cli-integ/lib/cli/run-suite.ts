@@ -65,6 +65,12 @@ async function main() {
       type: 'boolean',
       requiresArg: false,
     })
+    .options('maxWorkers', {
+      alias: 'w',
+      description: 'Specifies the maximum number of workers the worker-pool will spawn for running tests. We use a sensible default for running cli integ tests.',
+      type: 'string',
+      requiresArg: true,
+    })
     .help()
     .showHelpOnFail(false)
     .argv;
@@ -126,6 +132,7 @@ async function main() {
       ...args.runInBand ? ['-i'] : [],
       ...args.test ? ['-t', args.test] : [],
       ...args.verbose ? ['--verbose'] : [],
+      ...args.maxWorkers ? [`--maxWorkers=${args.maxWorkers}`] : [],
       ...passWithNoTests ? ['--passWithNoTests'] : [],
       ...args['test-file'] ? [args['test-file']] : [],
     ], path.resolve(__dirname, '..', '..', 'resources', 'integ.jest.config.js'));
