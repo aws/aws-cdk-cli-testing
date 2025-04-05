@@ -165,7 +165,11 @@ export class XpMutex {
       }
 
       // Retry until we've seen the full contents
-      if (contents.endsWith('.')) { return parseInt(contents.substring(0, contents.length - 1), 10); }
+      if (contents.endsWith('.')) {
+        return parseInt(contents.substring(0, contents.length - 1), 10);
+      } else {
+        console.log(`Partial contents in ${this.fileName}: ${contents}`);
+      }
       await sleep(10);
     }
 
