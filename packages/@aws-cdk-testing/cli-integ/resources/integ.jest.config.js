@@ -17,7 +17,7 @@ module.exports = {
 
   // Because of the way Jest concurrency works, this timeout includes waiting
   // for the lock. Which is almost never what we actually care about. Set it high.
-  testTimeout: 600000,
+  testTimeout: 2 * 60 * 60_000,
 
   maxWorkers: 50,
   reporters: [
