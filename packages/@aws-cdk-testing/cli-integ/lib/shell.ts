@@ -60,12 +60,15 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
       if (interaction) {
 
         if (interaction.prompt.test(lastLine.get())) {
+
+          // shift before writing to ensure the same interaction is not reused
+          remainingInteractions.shift();
+
           // subprocess expects a user input now.
           // we have to write the input AFTER the child has started
           // reading, so we do this with a small delay.
           setTimeout(() => {
             child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
-            remainingInteractions.shift();
           }, 500);
         }
 
@@ -73,14 +76,23 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
 
     });
 
-    child.onStderr(chunk => {
-      if (show === 'always') {
-        writeToOutputs(chunk.toString('utf-8'));
-      }
-      if (options.captureStderr ?? true) {
-        stderr.push(chunk);
-      }
-    });
+    if (tty && options.captureStderr === false) {
+      // in a tty stderr goes to the same fd as stdout
+      throw new Error(`Cannot disable 'captureStderr' in tty`);
+    }
+
+    if (!tty) {
+      // in a tty stderr goes to the same fd as stdout, so onStdout
+      // is sufficient.
+      child.onStderr(chunk => {
+        if (show === 'always') {
+          writeToOutputs(chunk.toString('utf-8'));
+        }
+        if (options.captureStderr ?? true) {
+          stderr.push(chunk);
+        }
+      });
+    }
 
     child.onError(reject);
 

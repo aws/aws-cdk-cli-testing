@@ -90,9 +90,9 @@ class PtyProcess implements IProcess {
     this.process.onData((e) => callback(Buffer.from(e)));
   }
 
-  public onStderr(callback: (chunk: Buffer) => void): void {
-    // in a pty all streams are the same
-    return this.onStdout(callback);
+  public onStderr(_callback: (chunk: Buffer) => void): void {
+    // https://github.com/microsoft/node-pty/issues/71
+    throw new Error('Cannot to register callback for stderr. A tty does not have separate output and error channels');
   }
 
   public onExit(callback: (exitCode: number) => void): void {
