@@ -61,12 +61,15 @@ export async function shell(command: string[], options: ShellOptions = {}): Prom
 
         if (interaction.prompt.test(lastLine.get())) {
 
-          // shift before writing to ensure the same interaction is not reused
+          // subprocess expects a user input now.
+          // first, shift the interactions to ensure the same interaction is not reused
           remainingInteractions.shift();
 
-          // subprocess expects a user input now.
-          // we have to write the input AFTER the child has started
-          // reading, so we do this with a small delay.
+          // then, reset the last line to prevent repeated matches caused by tty echoing
+          lastLine.reset();
+
+          // now write the input with a slight delay to ensure
+          // the child process has already started reading.
           setTimeout(() => {
             child.writeStdin(interaction.input + (interaction.end ?? os.EOL));
           }, 500);
@@ -320,5 +323,9 @@ class LastLine {
 
   public get(): string {
     return this.lastLine;
+  }
+
+  public reset() {
+    this.lastLine = '';
   }
 }
