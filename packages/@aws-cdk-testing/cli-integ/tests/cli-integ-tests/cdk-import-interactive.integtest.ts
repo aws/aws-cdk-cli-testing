@@ -27,14 +27,18 @@ integTest('cdk import prompts the user for sns topic arns', withDefaultFixture(a
     await fixture.cdk(['import', fullStackName], {
       interact: [
         {
-          prompt: /\(empty to skip\)/,
+          prompt: /Topic1.*\(empty to skip\):/,
           input: topic1Arn,
         },
         {
-          prompt: /\(empty to skip\)/,
+          prompt: /Topic2.*\(empty to skip\):/,
           input: topic2Arn,
         }
-      ]
+      ],
+      modEnv: {
+        // disable coloring because it messes up prompt matching.
+        FORCE_COLOR: '0'
+      }
     });
 
     // assert the stack now has the two topics
