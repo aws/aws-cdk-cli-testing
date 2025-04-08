@@ -92,7 +92,7 @@ class PtyProcess implements IProcess {
 
   public onStderr(_callback: (chunk: Buffer) => void): void {
     // https://github.com/microsoft/node-pty/issues/71
-    throw new Error('Cannot to register callback for stderr. A tty does not have separate output and error channels');
+    throw new Error(`Cannot register callback for 'stderr'. A tty does not have separate output and error channels`);
   }
 
   public onExit(callback: (exitCode: number) => void): void {
