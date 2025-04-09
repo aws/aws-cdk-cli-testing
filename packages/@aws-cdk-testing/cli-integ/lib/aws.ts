@@ -63,7 +63,7 @@ export class AwsClients {
     this.cloudFormation = new CloudFormationClient(this.config);
     this.s3 = new S3Client(this.config);
     this.ecr = new ECRClient(this.config);
-    this.ecrPublic = new ECRPUBLICClient(this.config);
+    this.ecrPublic = new ECRPUBLICClient({ ...this.config, region: 'us-east-1' /* public gallery is only available in us-east-1 */ });
     this.ecs = new ECSClient(this.config);
     this.sso = new SSOClient(this.config);
     this.sns = new SNSClient(this.config);
