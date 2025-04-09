@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { DescribeStacksCommand, Stack } from '@aws-sdk/client-cloudformation';
+import { GetAuthorizationTokenCommand } from '@aws-sdk/client-ecr-public';
 import { outputFromStack, AwsClients, sleep } from './aws';
 import { TestContext } from './integ-test';
 import { findYarnPackages } from './package-sources/repo-source';
@@ -343,6 +344,32 @@ export class TestFixture extends ShellHelper {
 
   public log(s: string) {
     this.output.write(`${s}\n`);
+  }
+
+  public async ecrPublicLogin() {
+
+    const tokenResponse = await this.aws.ecrPublic.send(new GetAuthorizationTokenCommand({}));
+    const authData = tokenResponse.authorizationData?.authorizationToken;
+
+    const docker = process.env.CDK_DOCKER ?? 'docker';
+
+    if (!authData) {
+      throw new Error("Could not retrieve ECR public auth token.");
+    }
+
+    const decoded = Buffer.from(authData, "base64").toString("utf-8");
+    const [username, password] = decoded.split(":");
+
+    await this.shell([docker, 'login',
+      '--username', username,
+      '--password', "${ECR_PASSWORD}",
+      'public.ecr.aws'], {
+      shell: true,
+      modEnv: {
+        ECR_PASSWORD: password,
+      },
+    });
+
   }
 
   public async cdkDeploy(stackNames: string | string[], options: CdkCliOptions = {}, skipStackRename?: boolean) {
