@@ -346,6 +346,10 @@ export class TestFixture extends ShellHelper {
     this.output.write(`${s}\n`);
   }
 
+  /**
+   * Login to the public ECR gallery using the current AWS credentials.
+   * Use this if your test needs to directly pull images outside of a `cdk` or `cdk-assets` command.
+   */
   public async ecrPublicLogin() {
 
     const tokenResponse = await this.aws.ecrPublic.send(new GetAuthorizationTokenCommand({}));
