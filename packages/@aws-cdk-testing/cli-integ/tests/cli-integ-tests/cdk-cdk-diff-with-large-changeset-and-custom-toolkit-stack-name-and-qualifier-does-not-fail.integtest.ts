@@ -5,6 +5,7 @@ jest.setTimeout(2 * 60 * 60_000); // Includes the time to acquire locks, worst-c
 integTest('cdk diff with large changeset and custom toolkit stack name and qualifier does not fail', withoutBootstrap(async (fixture) => {
   // Bootstrapping with custom toolkit stack name and qualifier
   const qualifier = fixture.qualifier;
+
   const toolkitStackName = fixture.bootstrapStackName;
   await fixture.cdkBootstrapModern({
     verbose: true,
