@@ -819,8 +819,27 @@ export async function installNpmPackages(fixture: TestFixture, packages: Record<
     devDependencies: packages,
   }, undefined, 2), { encoding: 'utf-8' });
 
-  // Now install that `package.json` using NPM7
-  await fixture.shell(['node', require.resolve('npm'), 'install']);
+  // we often ECONNRESET from NPM so lets retry. this might be because of high concurrency
+  // which overwhelmes system resources.
+  const timeoutMinutes = 10;
+  const timeoutDate = new Date(Date.now() + timeoutMinutes * 60 * 1000)
+  const retryAfterSeconds = 30;
+
+  while (true) {
+    try {
+      // Now install that `package.json` using NPM7
+      await fixture.shell(['node', require.resolve('npm'), 'install']);
+      break;
+    } catch (e: any) {
+      if (Date.now() < timeoutDate.getTime() && fixture.output.toString().includes('ECONNRESET' )) {
+        fixture.log(`npm install failed due to ECONNRESET. Retrying in ${retryAfterSeconds} seconds...`);
+        await sleep(retryAfterSeconds * 1000)
+        continue;
+      }
+      throw e;
+    }
+  }
+
 }
 
 const ALREADY_BOOTSTRAPPED_IN_THIS_RUN = new Set();
