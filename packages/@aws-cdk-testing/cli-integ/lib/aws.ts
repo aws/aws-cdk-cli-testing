@@ -6,6 +6,7 @@ import {
   type Stack,
 } from '@aws-sdk/client-cloudformation';
 import { DeleteRepositoryCommand, ECRClient } from '@aws-sdk/client-ecr';
+import { ECRPUBLICClient } from '@aws-sdk/client-ecr-public';
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { IAMClient } from '@aws-sdk/client-iam';
 import { LambdaClient } from '@aws-sdk/client-lambda';
@@ -42,6 +43,7 @@ export class AwsClients {
   public readonly cloudFormation: CloudFormationClient;
   public readonly s3: S3Client;
   public readonly ecr: ECRClient;
+  public readonly ecrPublic: ECRPUBLICClient;
   public readonly ecs: ECSClient;
   public readonly sso: SSOClient;
   public readonly sns: SNSClient;
@@ -61,6 +63,7 @@ export class AwsClients {
     this.cloudFormation = new CloudFormationClient(this.config);
     this.s3 = new S3Client(this.config);
     this.ecr = new ECRClient(this.config);
+    this.ecrPublic = new ECRPUBLICClient({ ...this.config, region: 'us-east-1' /* public gallery is only available in us-east-1 */ });
     this.ecs = new ECSClient(this.config);
     this.sso = new SSOClient(this.config);
     this.sns = new SNSClient(this.config);

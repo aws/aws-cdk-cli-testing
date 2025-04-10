@@ -172,6 +172,7 @@ const cliInteg = configureProject(
       '@aws-sdk/client-codeartifact@^3',
       '@aws-sdk/client-cloudformation@^3',
       '@aws-sdk/client-ecr@^3',
+      '@aws-sdk/client-ecr-public@^3',
       '@aws-sdk/client-ecs@^3',
       '@aws-sdk/client-iam@^3',
       '@aws-sdk/client-lambda@^3',

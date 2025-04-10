@@ -55,6 +55,8 @@ async function runInIsolatedContainer(fixture: TestFixture, pathsToMount: string
 
     await fs.chmod(scriptName, 0o755);
 
+    await fixture.ecrPublicLogin();
+
     // Run commands in a Docker shell
     await fixture.shell([
       docker, 'run', '--net=bridge', '--rm',
