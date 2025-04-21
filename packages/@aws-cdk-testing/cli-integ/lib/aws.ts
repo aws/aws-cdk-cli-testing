@@ -94,6 +94,11 @@ export class AwsClients {
       AWS_ACCESS_KEY_ID: this.identity.accessKeyId,
       AWS_SECRET_ACCESS_KEY: this.identity.secretAccessKey,
       AWS_SESSION_TOKEN: this.identity.sessionToken!,
+
+      // unset any previously used profile because the SDK will prefer
+      // this over static env credentials. this is relevant for tests running on CodeBuild
+      // because we use a profile as our main credentials source.
+      AWS_PROFILE: '',
     } : undefined;
   }
 
